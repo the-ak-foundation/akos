@@ -1,6 +1,5 @@
 # AKOS — AK Real-Time Operating System
 
-[![Build](https://github.com/the-ak-foundation/akos/actions/workflows/build.yml/badge.svg)](https://github.com/the-ak-foundation/akos/actions)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-the--ak--foundation.github.io-green)](https://the-ak-foundation.github.io)
 
@@ -30,7 +29,7 @@ Designed for ARM Cortex-M microcontrollers, portable to Linux and custom chipset
 │    ARM Cortex-M3 · Linux/POSIX (WIP)    │
 ├─────────────────────────────────────────┤
 │    HAL / BSP (Hardware Abstraction)     │
-│  STM32L151 · AK Embedded Base Kit v3   │
+│  STM32L151 · AK Embedded Base Kit v3    │
 └─────────────────────────────────────────┘
 ```
 
