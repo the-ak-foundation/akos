@@ -1,0 +1,90 @@
+---
+# AKOS .clang-format — Linux kernel style, 4-space indent
+# Run: clang-format -i <file.c>
+# Docs: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# Line length
+ColumnLimit: 80
+
+# Braces — K&R for control flow, Allman for functions
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:        false
+  AfterClass:            false
+  AfterControlStatement: Never
+  AfterEnum:             false
+  AfterFunction:         true   # function body brace on new line
+  AfterNamespace:        false
+  AfterStruct:           false
+  AfterUnion:            false
+  BeforeElse:            false
+  BeforeCatch:           false
+  IndentBraces:          false
+  SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
+
+# Spaces
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeComma: false
+SpaceAfterComma: true
+
+# Alignment
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+
+# Pointer alignment — left (uint8_t *ptr, not uint8_t* ptr)
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Function call / declaration wrapping
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+# Include sorting
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1. Corresponding header
+  - Regex:    '^"akos/'
+    Priority: 1
+  # 2. Other AKOS headers
+  - Regex:    '^"(hal|bsp|arch)/'
+    Priority: 2
+  # 3. System headers
+  - Regex:    '^<'
+    Priority: 3
+
+# Macro formatting
+IndentPPDirectives: None
+AlignEscapedNewlines: Left
+
+# Comments
+ReflowComments: true
+SpacesBeforeTrailingComments: 3
+
+# C++ specific (for .cpp files)
+Cpp11BracedListStyle: false
+Standard: c++17
