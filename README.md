@@ -3,42 +3,51 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-the--ak--foundation.github.io-green)](https://the-ak-foundation.github.io)
 
-AKOS is an open-source **preemptive Real-Time Operating System** for embedded systems, combining a priority-based preemptive scheduler with an **Event-Driven programming model** (Task / Signal / Timer / State-machine).
+AKOS is an open-source preemptive real-time operating system for embedded
+systems. It combines a priority-based scheduler with an event-driven program
+model built around tasks, signals, timers, and state machines.
 
-Designed for ARM Cortex-M microcontrollers, portable to Linux and custom chipsets.
-
----
+AKOS is designed for ARM Cortex-M microcontrollers and can be adapted to other
+targets.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│            Application Layer            │
-│     (Tasks, State-machines, Signals)    │
-├─────────────────────────────────────────┤
-│         Event-Driven Framework          │
-│    task_post() · timer_set() · msg_q    │
-├──────────────┬──────────────────────────┤
-│  Preemptive  │   Cooperative fallback   │
-│  Scheduler   │   (config option)        │
-├──────────────┴──────────────────────────┤
-│          Kernel Core (C/C++)            │
-│  Context switch · IRQ · Memory · Tick   │
-├─────────────────────────────────────────┤
-│        Architecture Port Layer          │
-│    ARM Cortex-M3 · Linux/POSIX (WIP)    │
-├─────────────────────────────────────────┤
-│    HAL / BSP (Hardware Abstraction)     │
-│  STM32L151 · AK Embedded Base Kit v3    │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ APPLICATION LAYERS                                                  │
+│                                                                     │
+│ Tasks · Signals · Software Timers · Logic                           │
+└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────┐ ┌─────────────────────────────────┐
+│ AKOS RTOS                       │ │ PLATFORM SUPPORT LAYER          │
+│                                 │ │                                 │
+│ ┌─────────────────────────────┐ │ │ ┌─────────────────────────────┐ │
+│ │ KERNEL SERVICES             │ │ │ │ BSP                         │ │
+│ │                             │ │ │ │                             │ │
+│ │ Core · Thread               │ │ │ │ Startup · Vector Table      │ │      
+│ │ Memory · Message            │ │ │ │ Clock · Pinmux · Console    │ │
+│ └─────────────────────────────┘ │ │ └─────────────────────────────┘ │
+│                                 │ │                                 │
+│ ┌─────────────────────────────┐ │ │ ┌─────────────────────────────┐ │
+│ │ PORT                        │ │ │ │ DRIVERS                     │ │
+│ │                             │ │ │ │                             │ │
+│ │ Context Switch · SysTick    │ │ │ │ GPIO · UART · Timer         │ │
+│ │ SVC · PendSV · IRQ Ctrl     │ │ │ │ I2C · SPI · Flash           │ │
+│ │ Stack Frame                 │ │ │ │                             │ │
+│ └─────────────────────────────┘ │ │ └─────────────────────────────┘ │
+└─────────────────────────────────┘ └─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ HARDWARE LAYER                                                      │
+│                                                                     │
+│ CPU Core · NVIC · SysTick · Flash · SRAM                            │
+│ GPIO · UART · Timer · I2C · SPI · External Devices                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-
 ## Supported hardware
 
 | Board | MCU | Status |
 |-------|-----|--------|
 | AK Embedded Base Kit v3 | STM32L151C8T6 (ARM Cortex-M3) | ✅ Primary target |
-| Linux / POSIX | Any | 🚧 In progress |
 
 ## Quick start
 
@@ -47,68 +56,37 @@ Designed for ARM Cortex-M microcontrollers, portable to Linux and custom chipset
 sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```
 
-**Build the blink sample:**
+**Build the blink sample on AK Embedded Base Kit v3 :**
 ```bash
 git clone https://github.com/the-ak-foundation/akos
 cd akos
-cmake -B build -DAKOS_BOARD=ak-base-kit-v3 -DAKOS_SAMPLE=00-blink
-cmake --build build
+cd sample/00-blink
+make
+make flash
 ```
 
-**Flash to hardware:**
-```bash
-# Using ak-flash
-ak_flash /dev/ttyUSB0 build/akos-00-blink.bin 0x08003000
-```
+## Samples
 
-## Repository structure
+The best starting point is [`sample/README.md`](sample/README.md).
 
-```
-akos/
-├── kernel/
-│   ├── core/          # Scheduler, task, signal, timer, message queue
-│   └── port/
-│       └── arm-cortex-m3/   # PendSV context switch, SysTick
-├── arch/
-│   └── arm-cortex-m3/       # Startup, vector table, linker scripts
-├── hal/
-│   └── stm32l151/           # GPIO, UART, SPI, I2C, TIM, Flash drivers
-├── bsp/
-│   └── ak-base-kit-v3/      # Board init, pin mapping, clock config
-├── include/
-│   └── akos/                # Public API headers
-├── samples/
-│   ├── 00-blink/            # Hello world — LED blink
-│   ├── 01-task-signal/      # Task + Signal basics
-│   └── 02-timer-periodic/   # Periodic timer
-├── tests/                   # Unit tests (host-native)
-└── cmake/                   # Toolchain files, helper functions
-```
+The current sample layout includes:
 
-## Key concepts
+- [`sample/00-blink`](sample/00-blink) for a minimal bare-metal STM32L1 bring-up
+- static thread registration with `AKOS_THREAD_DEFINE(...)`
+- a sample `Makefile` that includes the repo-root `Makefile`
+- a sample linker script that includes `kernel/kernel.ld` between flash start
+  and flash end
+- sample configuration guidance in `kernel/config.h`
 
-AKOS uses an **event-driven model** on top of a preemptive kernel:
-
-```c
-// Define a task
-void app_task_handler(ak_msg_t *msg) {
-    switch (msg->sig) {
-    case SIG_INIT:
-        timer_set(APP_TASK_ID, SIG_BLINK, 500, TIMER_PERIODIC);
-        break;
-    case SIG_BLINK:
-        hal_gpio_toggle(LED_PIN);
-        break;
-    }
-}
-```
-
-No `while(1)`, no blocking delays. Tasks communicate via signals — the scheduler handles preemption transparently.
+If you are bringing up a new board, start with `sample/00-blink` and adapt the
+board file, linker script, startup file, and `config.h` settings to your target.
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/the-ak-foundation/.github/blob/main/CONTRIBUTING.md) and the [documentation](https://the-ak-foundation.github.io/docs/porting).
+The kernel source uses `akos_` prefixes for public APIs. New code should follow
+the existing naming style and keep board-specific logic in sample or platform
+code.
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0. See [`LICENSE`](LICENSE).
