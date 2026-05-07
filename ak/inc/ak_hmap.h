@@ -5,16 +5,16 @@
 
 /* array of lists */
 typedef struct {
-  void **tbl, **ends;
-  size_t tbl_sz, offset;
+    void **tbl, **ends;
+    size_t tbl_size, offset;
 } ak_hmap_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-int ak_hmap_ins(ak_hmap_t *hmap, int key, void *item);
-int ak_hmap_rm(ak_hmap_t *hmap, int key, void *item);
+int ak_hmap_insert(ak_hmap_t* hmap, int key, void* item);
+int ak_hmap_remove(ak_hmap_t* hmap, int key, void* item);
 
 #ifdef __cplusplus
 }

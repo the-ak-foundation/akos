@@ -21,10 +21,10 @@ void test_list_insBef_nullParam(void) {
   ak_list_node_t new_node;
   void *ret;
 
-  ret = ak_list_ins_bef(NULL, &new_node, OFFSET);
+  ret = ak_list_insert_before(NULL, &new_node, OFFSET);
   TEST_ASSERT_NULL(ret);
 
-  ret = ak_list_ins_bef(&g_wrapper.node, NULL, OFFSET);
+  ret = ak_list_insert_before(&g_wrapper.node, NULL, OFFSET);
   TEST_ASSERT_NULL(ret);
 }
 
@@ -32,10 +32,10 @@ void test_list_insAft_nullParam(void) {
   ak_list_node_t new_node;
   void *ret;
 
-  ret = ak_list_ins_aft(NULL, &new_node, OFFSET);
+  ret = ak_list_insert_after(NULL, &new_node, OFFSET);
   TEST_ASSERT_NULL(ret);
 
-  ret = ak_list_ins_aft(&g_wrapper.node, NULL, OFFSET);
+  ret = ak_list_insert_after(&g_wrapper.node, NULL, OFFSET);
   TEST_ASSERT_NULL(ret);
 }
 
@@ -50,7 +50,7 @@ void test_list_insBef_head(void) {
   };
   void *ret;
 
-  ret = ak_list_ins_bef(&g_wrapper.node, &new_wrapper.node, OFFSET);
+  ret = ak_list_insert_before(&g_wrapper.node, &new_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, ret);
   TEST_ASSERT_NULL(new_wrapper.node.prev);
   TEST_ASSERT_NULL(g_wrapper.node.next);
@@ -67,8 +67,8 @@ void test_list_insBef_mid(void) {
   };
   void *ret;
 
-  ak_list_ins_bef(&g_wrapper.node, &head_wrapper.node, OFFSET);
-  ret = ak_list_ins_bef(&g_wrapper.node, &new_wrapper.node, OFFSET);
+  ak_list_insert_before(&g_wrapper.node, &head_wrapper.node, OFFSET);
+  ret = ak_list_insert_before(&g_wrapper.node, &new_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, ret);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, head_wrapper.node.next);
   TEST_ASSERT_EQUAL_PTR(&head_wrapper, new_wrapper.node.prev);
@@ -82,7 +82,7 @@ void test_list_insAft_tail(void) {
   };
   void *ret;
 
-  ret = ak_list_ins_aft(&g_wrapper.node, &new_wrapper.node, OFFSET);
+  ret = ak_list_insert_after(&g_wrapper.node, &new_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, ret);
   TEST_ASSERT_NULL(new_wrapper.node.next);
   TEST_ASSERT_NULL(g_wrapper.node.prev);
@@ -99,8 +99,8 @@ void test_list_insAft_mid(void) {
   };
   void *ret;
 
-  ak_list_ins_aft(&g_wrapper.node, &tail_wrapper.node, OFFSET);
-  ret = ak_list_ins_aft(&g_wrapper.node, &new_wrapper.node, OFFSET);
+  ak_list_insert_after(&g_wrapper.node, &tail_wrapper.node, OFFSET);
+  ret = ak_list_insert_after(&g_wrapper.node, &new_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, ret);
   TEST_ASSERT_EQUAL_PTR(&new_wrapper, g_wrapper.node.next);
   TEST_ASSERT_EQUAL_PTR(&g_wrapper, new_wrapper.node.prev);
@@ -114,7 +114,7 @@ void test_list_rm_head(void) {
   };
   void *ret;
 
-  ak_list_ins_aft(&g_wrapper.node, &tail_wrapper.node, OFFSET);
+  ak_list_insert_after(&g_wrapper.node, &tail_wrapper.node, OFFSET);
   ret = ak_list_rm(&g_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&tail_wrapper, ret);
   TEST_ASSERT_NULL(tail_wrapper.node.prev);
@@ -126,7 +126,7 @@ void test_list_rm_tail(void) {
   };
   void *ret;
 
-  ak_list_ins_aft(&g_wrapper.node, &tail_wrapper.node, OFFSET);
+  ak_list_insert_after(&g_wrapper.node, &tail_wrapper.node, OFFSET);
   ret = ak_list_rm(&tail_wrapper.node, OFFSET);
   TEST_ASSERT_NULL(ret);
   TEST_ASSERT_NULL(g_wrapper.node.next);
@@ -141,8 +141,8 @@ void test_list_rm_mid(void) {
   };
   void *ret;
 
-  ak_list_ins_aft(&g_wrapper.node, &mid_wrapper.node, OFFSET);
-  ak_list_ins_aft(&mid_wrapper.node, &tail_wrapper.node, OFFSET);
+  ak_list_insert_after(&g_wrapper.node, &mid_wrapper.node, OFFSET);
+  ak_list_insert_after(&mid_wrapper.node, &tail_wrapper.node, OFFSET);
   ret = ak_list_rm(&mid_wrapper.node, OFFSET);
   TEST_ASSERT_EQUAL_PTR(&tail_wrapper, ret);
   TEST_ASSERT_EQUAL_PTR(&tail_wrapper, g_wrapper.node.next);

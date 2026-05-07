@@ -1,6 +1,6 @@
 PRJ_DIR   ?= ../..
-BUILD_DIR = $(PRJ_DIR)/build/test/rdy_list
-CURR_DIR  = $(PRJ_DIR)/test/rdy_list
+BUILD_DIR = $(PRJ_DIR)/build/test/ready_list
+CURR_DIR  = $(PRJ_DIR)/test/ready_list
 
 PLATFORM = host
 

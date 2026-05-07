@@ -5,9 +5,9 @@
 #include "ak_prio.h"
 
 typedef struct {
-  void *sp; /* this must be the first field */
-  ak_list_node_t sched_node;
-  ak_prio_t prio;
+    void* stack_ptr; /* this must be the first field */
+    ak_list_node_t sched_node;
+    ak_prio_t prio;
 } ak_tcb_t;
 
 #endif /* AK_TASK_H */
