@@ -1,9 +1,16 @@
 #ifndef AKOS_SAMPLE_00_BLINK_BOARD_H
 #define AKOS_SAMPLE_00_BLINK_BOARD_H
 
-/**
- * @file board.h
- * @brief Bare-metal GPIO helpers that use literal STM32L1 register addresses.
+/****************************************************************************/
+/*!
+ * @file	board.h
+ * @brief	Bare-metal GPIO helpers that use literal STM32L1 register addresses.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS example
  */
 
 #include <stdbool.h>

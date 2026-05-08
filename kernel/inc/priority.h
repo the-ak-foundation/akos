@@ -1,17 +1,17 @@
-/*
- * priority.h
+/****************************************************************************/
+/*!
+ * @file	priority.h
+ * @brief	Priority bitmap scheduler helpers.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef PRIORITY_H
 #define PRIORITY_H
-
-/**
- * @file priority.h
- * @brief Priority bitmap scheduler helpers.
- */
 
 #ifdef __cplusplus
 extern "C"

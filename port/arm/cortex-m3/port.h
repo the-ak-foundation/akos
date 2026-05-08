@@ -1,10 +1,17 @@
+/****************************************************************************/
+/*!
+ * @file	port.h
+ * @brief	Cortex-M3 port API for AKOS.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
+ */
+
 #ifndef PORT_H
 #define PORT_H
-
-/**
- * @file port.h
- * @brief Cortex-M3 port API for AKOS.
- */
 
 #include <stdint.h>
 #include <stddef.h>

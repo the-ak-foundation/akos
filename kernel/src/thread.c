@@ -1,6 +1,13 @@
-/**
- * @file thread.c
- * @brief Thread management, scheduling, and thread messaging integration.
+/****************************************************************************/
+/*!
+ * @file	thread.c
+ * @brief	Thread management, scheduling, and thread messaging integration.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "thread.h"

@@ -1,6 +1,13 @@
-/**
- * @file main.c
- * @brief AKOS blink example with three independent LED threads.
+/****************************************************************************/
+/*!
+ * @file	main.c
+ * @brief	AKOS blink example with three independent LED threads.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS example
  */
 
 #include <stdint.h>

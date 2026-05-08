@@ -1,17 +1,17 @@
-/*
- * memory.h
+/****************************************************************************/
+/*!
+ * @file	memory.h
+ * @brief	Static-heap allocator APIs.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef MEMORY_H
 #define MEMORY_H
-
-/**
- * @file memory.h
- * @brief Static-heap allocator APIs.
- */
 
 #ifdef __cplusplus
 extern "C"

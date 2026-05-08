@@ -1,17 +1,17 @@
-/*
- * message.h
+/****************************************************************************/
+/*!
+ * @file	message.h
+ * @brief	Message object and message queue APIs.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef MESSAGE_H
 #define MESSAGE_H
-
-/**
- * @file message.h
- * @brief Message object and message queue APIs.
- */
 
 #ifdef __cplusplus
 extern "C"

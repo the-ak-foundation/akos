@@ -1,6 +1,13 @@
-/**
- * @file timer.c
- * @brief Software timer pool, lists, and processing loop.
+/****************************************************************************/
+/*!
+ * @file	timer.c
+ * @brief	Software timer pool, lists, and processing loop.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "core.h"

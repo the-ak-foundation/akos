@@ -1,17 +1,17 @@
-/*
- * timer.h
+/****************************************************************************/
+/*!
+ * @file	timer.h
+ * @brief	Software timer APIs.
  *
- *  Created on: Dec 6, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef TIMER_H
 #define TIMER_H
-
-/**
- * @file timer.h
- * @brief Software timer APIs.
- */
 
 #ifdef __cplusplus
 extern "C"

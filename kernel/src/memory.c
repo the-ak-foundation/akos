@@ -10,9 +10,16 @@
 
 // clang-format off
 
-/**
- * @file memory.c
- * @brief Fixed-size heap allocator implementation.
+/****************************************************************************/
+/*!
+ * @file	memory.c
+ * @brief	Fixed-size heap allocator implementation.
+ *
+ * @author	AKOS contributors
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "config.h"

@@ -1,17 +1,17 @@
-/*
- * thread.h
+/****************************************************************************/
+/*!
+ * @file	thread.h
+ * @brief	Thread scheduling and thread messaging APIs.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef THREAD_H
 #define THREAD_H
-
-/**
- * @file thread.h
- * @brief Thread scheduling and thread messaging APIs.
- */
 
 #ifdef __cplusplus
 extern "C"

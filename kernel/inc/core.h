@@ -1,19 +1,17 @@
-/*
- * core.h
+/****************************************************************************/
+/*!
+ * @file	core.h
+ * @brief	Kernel control and critical-section API.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
+ * @author	Snoopy3921 - AK Foundation
  *
- *      The kernel provides the system scheduler and thread runtime.
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef CORE_H
 #define CORE_H
-
-/**
- * @file core.h
- * @brief Kernel control and critical-section API.
- */
 
 #ifdef __cplusplus
 extern "C"

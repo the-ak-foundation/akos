@@ -1,6 +1,13 @@
-/**
- * @file message.c
- * @brief Message pool and queue implementation.
+/****************************************************************************/
+/*!
+ * @file	message.c
+ * @brief	Message pool and queue implementation.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "message.h"

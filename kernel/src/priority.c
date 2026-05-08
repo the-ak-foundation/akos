@@ -1,6 +1,13 @@
-/**
- * @file priority.c
- * @brief Priority bitmap operations.
+/****************************************************************************/
+/*!
+ * @file	priority.c
+ * @brief	Priority bitmap operations.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "priority.h"

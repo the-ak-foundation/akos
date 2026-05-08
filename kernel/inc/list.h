@@ -1,12 +1,13 @@
-/*
- * list.h
+/****************************************************************************/
+/*!
+ * @file	list.h
+ * @brief	Doubly-linked list types and APIs for scheduler internals.
  *
- *  Created on: Jun 26, 2024
- *      Author: giahu
- */
-/**
- * @file list.h
- * @brief Doubly-linked list types and APIs for scheduler internals.
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #ifndef LIST_H

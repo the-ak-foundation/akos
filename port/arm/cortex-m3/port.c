@@ -1,6 +1,13 @@
-/**
- * @file port.c
- * @brief Cortex-M3 port implementation (context switching and tick hook).
+/****************************************************************************/
+/*!
+ * @file	port.c
+ * @brief	Cortex-M3 port implementation (context switching and tick hook).
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "port.h"

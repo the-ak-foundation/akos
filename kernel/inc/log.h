@@ -1,10 +1,17 @@
+/****************************************************************************/
+/*!
+ * @file	log.h
+ * @brief	Logging and assertion macro definitions.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
+ */
+
 #ifndef LOG_H
 #define LOG_H
-
-/**
- * @file log.h
- * @brief Logging and assertion macro definitions.
- */
 
 #include <stdio.h>
 #include "config.h"

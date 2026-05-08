@@ -1,6 +1,13 @@
-/**
- * @file list.c
- * @brief Doubly-linked list primitives used by scheduler and timers.
+/****************************************************************************/
+/*!
+ * @file	list.c
+ * @brief	Doubly-linked list primitives used by scheduler and timers.
+ *
+ * @author	Snoopy3921 - AK Foundation
+ *
+ * @date	2026/05/08
+ *
+ * @module	AKOS
  */
 
 #include "config.h"
