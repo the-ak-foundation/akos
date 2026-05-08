@@ -1,6 +1,6 @@
 # AKOS 00-Blink
 
-This is a minimal bare-metal AKOS starter for three blinking LEDs.
+This is a minimal bare-metal AKOS example for three blinking LEDs.
 
 What it gives you:
 - three statically registered AKOS threads
@@ -26,8 +26,8 @@ If your board is different, change the macros in `board.h`:
 - `BLINK_RCC_AHBENR_GPIOB_EN`
 
 Build note:
-- Run `make` from `sample/00-blink` to build the sample image.
-- The sample uses the STM32L1 vendor files in this folder: `stm32l1xx.h`, `system_stm32l1xx.c`, `system_stm32l1xx.h`, `startup_stm32l151xb.s`, and `stm32l151xx.ld`.
+ - Run `make` from `examples/00-blink` to build the example image.
+ - The example uses the STM32L1 vendor files in this folder: `stm32l1xx.h`, `system_stm32l1xx.c`, `system_stm32l1xx.h`, `startup_stm32l151xb.s`, and `stm32l151xx.ld`.
 - Adjust the clock setup inside `system_stm32l1xx.c` for your board if needed.
-- The sample uses AKOS kernel APIs, so it runs on the bare-metal target image once wired into your board support package.
-- Finally run `make flash` from `sample/00-blink` to see PB8, PA2, PA3 blinks independently.
+ - The example uses AKOS kernel APIs, so it runs on the bare-metal target image once wired into your board support package.
+ - Finally run `make flash` from `examples/00-blink` to see PB8, PA2, PA3 blinks independently.

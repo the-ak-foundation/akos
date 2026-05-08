@@ -1,6 +1,6 @@
 /**
  * @file main.c
- * @brief AKOS blink sample with three independent LED threads.
+ * @brief AKOS blink example with three independent LED threads.
  */
 
 #include <stdint.h>
@@ -29,19 +29,19 @@ static void blink_task(void *p_arg)
 static const blink_thread_ctx_t blink_pb8_ctx = {
     .gpio_base = BLINK_GPIOB_BASE,
     .pin = BLINK_LED_PB8_PIN,
-    .delay_ticks = 250u,
+    .delay_ticks = 100u,
 };
 
 static const blink_thread_ctx_t blink_pa2_ctx = {
     .gpio_base = BLINK_GPIOA_BASE,
     .pin = BLINK_LED_PA2_PIN,
-    .delay_ticks = 400u,
+    .delay_ticks = 200u,
 };
 
 static const blink_thread_ctx_t blink_pa3_ctx = {
     .gpio_base = BLINK_GPIOA_BASE,
     .pin = BLINK_LED_PA3_PIN,
-    .delay_ticks = 650u,
+    .delay_ticks = 400u,
 };
 
 AKOS_THREAD_DEFINE(blink_pb8_thread_desc, 0u, blink_task, &blink_pb8_ctx, 4u, 0u, 20u);

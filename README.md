@@ -56,35 +56,35 @@ targets.
 sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```
 
-**Build the blink sample on AK Embedded Base Kit v3 :**
+**Build the blink example on AK Embedded Base Kit v3:**
 ```bash
 git clone https://github.com/the-ak-foundation/akos
 cd akos
-cd sample/00-blink
+cd examples/00-blink
 make
 make flash
 ```
 
-## Samples
+## Examples
 
-The best starting point is [`sample/README.md`](sample/README.md).
+The best starting point is [`examples/README.md`](examples/README.md).
 
-The current sample layout includes:
+The current example layout includes:
 
-- [`sample/00-blink`](sample/00-blink) for a minimal bare-metal STM32L1 bring-up
+- [`examples/00-blink`](examples/00-blink) for a minimal bare-metal STM32L1 bring-up
 - static thread registration with `AKOS_THREAD_DEFINE(...)`
-- a sample `Makefile` that includes the repo-root `Makefile`
-- a sample linker script that includes `kernel/kernel.ld` between flash start
+- an example `Makefile` that includes the repo-root `Makefile`
+- an example linker script that includes `kernel/kernel.ld` between flash start
   and flash end
-- sample configuration guidance in `kernel/config.h`
+- example configuration guidance in `kernel/config.h`
 
-If you are bringing up a new board, start with `sample/00-blink` and adapt the
+If you are bringing up a new board, start with `examples/00-blink` and adapt the
 board file, linker script, startup file, and `config.h` settings to your target.
 
 ## Contributing
 
 The kernel source uses `akos_` prefixes for public APIs. New code should follow
-the existing naming style and keep board-specific logic in sample or platform
+the existing naming style and keep board-specific logic in example or platform
 code.
 
 ## License
