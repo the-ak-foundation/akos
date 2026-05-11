@@ -1,5 +1,3 @@
-#include "ak_sched.h"
-
 #include <stddef.h>
 #include <stdio.h>
 
@@ -7,48 +5,41 @@
 #include "ak_cpu.h"
 #include "ak_list.h"
 #include "ak_prio.h"
+#include "ak_sched.h"
 #include "ak_task.h"
 #include "port.h"
 
 ak_tcb_t* g_ak_sched_running;
 ak_tcb_t* g_ak_sched_top_ready;
 
+static uint32_t _ak_tick;
 static uint32_t _ak_sched_lock_nest_cnt;
+
 static ak_tcb_t* _ak_ready_table[AK_CFG_PRIO_MAX + 1];
 static ak_tcb_t* _ak_ready_curr[AK_CFG_PRIO_MAX + 1];
 
+static bool _ak_sched_update_top_ready(void);
+
 static int _ak_sched_ready_insert(ak_tcb_t* task);
 static int _ak_sched_ready_remove(ak_tcb_t* task);
+static int _ak_sched_waiting_insert(ak_tcb_t* task);
+static int _ak_sched_waiting_remove(ak_tcb_t* task);
+static int _ak_sched_blocked_insert(ak_tcb_t* task);
+static int _ak_sched_blocked_remove(ak_tcb_t* task);
 
-void ak_sched_reset(void) {
+void ak_sched_init(void) {
     AK_CPU_CRIT_ENTER();
 
     g_ak_sched_running = NULL;
     g_ak_sched_top_ready = NULL;
+    _ak_tick = 0;
+    _ak_sched_lock_nest_cnt = 0;
     ak_prio_reset();
     for (int i = 0; i <= AK_CFG_PRIO_MAX; ++i) {
         _ak_ready_table[i] = _ak_ready_curr[i] = NULL;
     }
 
     AK_CPU_CRIT_EXIT();
-}
-
-bool ak_sched_update_top_ready(void) {
-    AK_CPU_CRIT_ENTER();
-
-    ak_prio_t top_prio = ak_prio_get_top();
-    bool has_higher_prio = (top_prio > g_ak_sched_running->prio);
-    bool is_prio_single =
-        (g_ak_sched_running->sched_node.next == g_ak_sched_running);
-    bool res = has_higher_prio || !is_prio_single;
-    if (res) {
-        g_ak_sched_top_ready = has_higher_prio
-                                   ? _ak_ready_curr[top_prio]
-                                   : g_ak_sched_running->sched_node.next;
-    }
-
-    AK_CPU_CRIT_EXIT();
-    return res;
 }
 
 void ak_sched_lock(void) {
@@ -73,6 +64,34 @@ void ak_sched_unlock(void) {
     }
 
     AK_CPU_CRIT_EXIT();
+}
+
+bool ak_sched_tick(void) {
+    AK_CPU_CRIT_ENTER();
+
+    ++_ak_tick;
+    // tick increment logic
+
+    AK_CPU_CRIT_EXIT();
+}
+
+bool ak_sched_task_switch_state(ak_tcb_t* task, ak_task_state_t new_state) {
+    // remove from current list
+    // insert to destination list
+}
+
+bool _ak_sched_update_top_ready(void) {
+    ak_prio_t top_prio = ak_prio_get_top();
+    bool has_higher_prio = (top_prio > g_ak_sched_running->prio);
+    bool is_prio_single =
+        (g_ak_sched_running->sched_node.next == g_ak_sched_running);
+    bool res = has_higher_prio || !is_prio_single;
+    if (res) {
+        g_ak_sched_top_ready = has_higher_prio
+                                   ? _ak_ready_curr[top_prio]
+                                   : g_ak_sched_running->sched_node.next;
+    }
+    return res;
 }
 
 int _ak_sched_ready_insert(ak_tcb_t* task) {

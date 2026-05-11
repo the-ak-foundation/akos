@@ -14,6 +14,13 @@
 #define PORT_SCHED_LOCK()         __set_BASEPRI(g_port_sched_lock_prio)
 #define PORT_SCHED_UNLOCK()       __set_BASEPRI(0)
 
+#ifndef SCB
+    #warning SCB is not defined. Please include CMSIS Core Header files.
+    #define PORT_SWITCH_CONTEXT()
+#else
+    #define PORT_SWITCH_CONTEXT() SCB |= SCB_ICSR_PENDSVSET_Msk
+#endif  // SCB
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

@@ -1,13 +1,6 @@
 #include "port.h"
 #include "ak_sched.h"
 
-#ifndef SCB
-    #warning SCB is not defined. Please include CMSIS Core Header files.
-    #define TRIGGER_PENDSV()
-#else
-    #define TRIGGER_PENDSV() SCB |= SCB_ICSR_PENDSVSET_Msk
-#endif  // SCB
-
 extern int SysTick_IRQn;
 uint8_t g_port_sched_lock_prio;
 
@@ -16,8 +9,8 @@ void port_init(void) {
 }
 
 void SysTick_Handler(void) {
-    if (ak_sched_inc_tick_needs_switch()) {
-        TRIGGER_PENDSV();
+    if (ak_sched_tick()) {
+        PORT_SWITCH_CONTEXT();
     }
 }
 
@@ -36,7 +29,7 @@ __attribute__((naked)) void SVC_Handler(void) {
 
         // use process stack pointer (PSP) after exception return
         "ldr    lr, =0xFFFFFFFD;"
-        "bx     lr");
+        "bx     lr;");
 }
 
 __attribute__((naked)) void PendSV_Handler(void) {
@@ -53,9 +46,9 @@ __attribute__((naked)) void PendSV_Handler(void) {
         // set running TCB to top ready TCB
         "ldr    r2, g_ak_sched_top_ready;"
         "str    r2, [r1];"
-        "ldr    r0, [r2];"
 
         // pop callee-save registers
+        "ldr    r0, [r2];"
         "ldmia  r0!, {r4-r11};"
         "msr    psp, r0;"
 
