@@ -132,11 +132,15 @@ cd examples/00-blink
 make
 ```
 
-Flash it with:
+This produces `akos-00-blink.bin`. Flash it to the bootloader offset with
+[`ak-flash`](https://github.com/the-ak-foundation/ak-flash):
 
 ```bash
-make flash
+ak-flash /dev/ttyUSB0 akos-00-blink.bin 0x08003000
 ```
+
+If your serial device is different, replace `/dev/ttyUSB0` with the correct
+port for your board.
 
 ## Custom Board Checklist
 
