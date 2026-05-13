@@ -1,6 +1,8 @@
 #ifndef PORT_H
 #define PORT_H
 
-#include "arch/port.h"
+#if defined(__arm__) || defined(__aarch64__)
+    #include "arm/port.h"
+#endif  // defined(__arm__) || defined(__aarch64__)
 
-#endif /* PORT_H */
+#endif  // PORT_H

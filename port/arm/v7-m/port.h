@@ -1,5 +1,5 @@
-#ifndef ARM_V7M_PORT_H
-#define ARM_V7M_PORT_H
+#ifndef PORT_ARM_V7M__H
+#define PORT_ARM_V7M__H
 
 #include <stdint.h>
 
@@ -23,7 +23,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif  // __cplusplus */
 
 extern uint8_t g_port_sched_lock_prio;
 
@@ -37,6 +37,6 @@ __attribute__((naked)) void SVC_Handler(void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif  // __cplusplus
 
-#endif /* ARM_V7M_PORT_H */
+#endif  // PORT_ARM_V7M__H
