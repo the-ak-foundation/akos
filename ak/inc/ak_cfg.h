@@ -7,4 +7,7 @@
 
 #define AK_CFG_PRIO_MAX 255u
 
+// should be a prime
+#define AK_CFG_WAITING_TABLE_SIZE 23
+
 #endif /* AK_CFG_H */

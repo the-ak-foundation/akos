@@ -132,7 +132,7 @@ _ak_mem_block_header_t* _ak_mem_rem_block(_ak_mem_block_header_t* p_block) {
         (_ak_mem_block_header_t*)p_block->node.prev;
     _ak_mem_avail_size += AK_BLOCK_HEADER_SIZE;
     p_prev_block->size += p_block->size;
-    ak_list_rm(&p_block->node, 0);
+    ak_list_remove(&p_block->node, 0);
 #ifdef AK_CFG_HEAP_CLEAR_ON_FREE
     memset(p_block, 0, AK_BLOCK_HEADER_SIZE);
 #endif /* AF_CFG_HEAP_CLEAR_ON_FREE */

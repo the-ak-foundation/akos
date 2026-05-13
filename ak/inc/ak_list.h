@@ -31,7 +31,7 @@ void* ak_list_insert_after(ak_list_node_t* pos,
 /** Remove node at pos.
  * @return pos->next's wrapper if success. NULL if not.
  */
-void* ak_list_rm(ak_list_node_t* pos, size_t offset);
+void* ak_list_remove(ak_list_node_t* pos, size_t offset);
 
 #ifdef __cplusplus
 }

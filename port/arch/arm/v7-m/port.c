@@ -21,7 +21,7 @@ __attribute__((naked)) void SVC_Handler(void) {
         "ldr    r0, [r0];"
         "msr    psp, r0;"
 
-        // CONTROL.nPRIV=1. thread has unprivileged access.
+        // CONTROL.nPRIV=1. Thread has unprivileged access.
         "mrs    r1, control;"
         "orr    r1, r1, #1;"
         "msr    control, r1;"
@@ -34,7 +34,7 @@ __attribute__((naked)) void SVC_Handler(void) {
 
 __attribute__((naked)) void PendSV_Handler(void) {
     __asm__ __volatile__(
-        // push callee-saved registers
+        // push callee-save registers
         "mrs    r0, psp;"
         "stmdb  r0!, {r4-r11};"
 
