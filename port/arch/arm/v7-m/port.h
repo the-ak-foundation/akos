@@ -32,8 +32,8 @@ extern void __NVIC_SetPriority(int irq, uint32_t prio);
 
 void port_init(void);
 void SysTick_Handler(void);
-void PendSV_Handler(void);
-void SVC_Handler(void);
+__attribute__((naked)) void PendSV_Handler(void);
+__attribute__((naked)) void SVC_Handler(void);
 
 #ifdef __cplusplus
 }

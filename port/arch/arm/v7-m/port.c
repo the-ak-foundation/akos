@@ -14,25 +14,26 @@ void SysTick_Handler(void) {
     }
 }
 
-__attribute__((naked)) void SVC_Handler(void) {
+void SVC_Handler(void) {
     __asm__ __volatile__(
         // load the first task's stack pointer
         "ldr    r0, g_ak_sched_running;"
         "ldr    r0, [r0];"
+        "ldmia  r0!, {r4-r11};"
         "msr    psp, r0;"
 
         // CONTROL.nPRIV=1. Thread has unprivileged access.
         "mrs    r1, control;"
-        "orr    r1, r1, #1;"
+        "orr    r1, #1;"
         "msr    control, r1;"
         "isb;"
 
         // use process stack pointer (PSP) after exception return
-        "ldr    lr, =0xFFFFFFFD;"
+        "orr    lr, #0xD;"
         "bx     lr;");
 }
 
-__attribute__((naked)) void PendSV_Handler(void) {
+void PendSV_Handler(void) {
     __asm__ __volatile__(
         // push callee-save registers
         "mrs    r0, psp;"
