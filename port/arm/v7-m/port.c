@@ -16,42 +16,47 @@ void SysTick_Handler(void) {
 
 void SVC_Handler(void) {
     __asm__ __volatile__(
-        // load the first task's stack pointer
-        "ldr    r0, g_ak_sched_running;"
-        "ldr    r0, [r0];"
-        "ldmia  r0!, {r4-r11};"
-        "msr    psp, r0;"
+        // ICSR.PENDSVSET = 1. Trigger PendSV interrupt
+        "ldr    r0, =0xE000ED04             \n\t"
+        "ldr    r1, =0x10000000             \n\t"
+        "str    r1, [r0]                    \n\t"
 
-        // CONTROL.nPRIV=1. Thread has unprivileged access.
-        "mrs    r1, control;"
-        "orr    r1, #1;"
-        "msr    control, r1;"
-        "isb;"
+        // CONTROL.nPRIV = 1. Thread mode is Unprivileged
+        "mrs    r0, control                 \n\t"
+        "orr    r0, #1                      \n\t"
+        "msr    control, r0                 \n\t"
+        "isb                                \n\t"
 
-        // use process stack pointer (PSP) after exception return
-        "orr    lr, #0xD;"
-        "bx     lr;");
+        // EXC_RETURN to Thread mode using PSP
+        "orr    lr, #0xD                    \n\t"
+        "bx     lr                          \n\t");
 }
 
 void PendSV_Handler(void) {
     __asm__ __volatile__(
-        // push callee-save registers
-        "mrs    r0, psp;"
-        "stmdb  r0!, {r4-r11};"
+        // If g_ak_sched_running == NULL, don't save context
+        "ldr    r1, =g_ak_sched_running     \n\t"
+        "ldr    r2, [r1]                    \n\t"
+        "cbz    r2, PendSV_no_context_save  \n\t"
 
-        // save SP to running TCB
-        "ldr    r1, =g_ak_sched_running;"
-        "ldr    r2, [r1];"
-        "str    r0, [r2];"
+        // Save current context (R4-R11)
+        "mrs    r0, psp                     \n\t"
+        "stmdb  r0!, {r4-r11}               \n\t"
 
-        // set running TCB to top ready TCB
-        "ldr    r2, g_ak_sched_top_ready;"
-        "str    r2, [r1];"
+        // Save updated SP to running TCB
+        "str    r0, [r2]                    \n"
 
-        // pop callee-save registers
-        "ldr    r0, [r2];"
-        "ldmia  r0!, {r4-r11};"
-        "msr    psp, r0;"
+        // g_ak_sched_running = g_ak_sched_top_ready
+        "PendSV_no_context_save:            \n\t"
+        "ldr    r2, =g_ak_sched_top_ready   \n\t"
+        "ldr    r2, [r2]                    \n\t"
+        "str    r2, [r1]                    \n\t"
 
-        "bx     lr;");
+        // Restore new context (R4-R11)
+        "ldr    r0, [r2]                    \n\t"
+        "ldmia  r0!, {r4-r11}               \n\t"
+        "msr    psp, r0                     \n\t"
+
+        // Return to new task
+        "bx     lr                          \n\t");
 }
