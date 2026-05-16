@@ -38,8 +38,8 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeComma: false
-SpaceAfterComma: true
+# SpaceBeforeComma: false
+# SpaceAfterComma: true
 
 # Alignment
 AlignConsecutiveAssignments:
