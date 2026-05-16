@@ -1,14 +1,13 @@
 # AKOS — AK Real-Time Operating System
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-the--ak--foundation.github.io-green)](https://the-ak-foundation.github.io)
+[![Static Badge](https://img.shields.io/badge/AKOS-User_Manual-red)](https://the-ak-foundation.github.io/akos-docs)
+
 
 AKOS is an open-source preemptive real-time operating system for embedded
 systems. It combines a priority-based scheduler with an event-driven program
 model built around tasks, signals, timers, and state machines.
 
-AKOS is designed for ARM Cortex-M microcontrollers and can be adapted to other
-targets.
 
 ## Architecture
 
@@ -43,11 +42,11 @@ targets.
 │ GPIO · UART · Timer · I2C · SPI · External Devices                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-## Supported hardware
+## Hardware support
 
 | Board | MCU | Status |
 |-------|-----|--------|
-| AK Embedded Base Kit v3 | STM32L151C8T6 (ARM Cortex-M3) | ✅ Primary target |
+| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151C8T6 (ARM Cortex-M3) | Primary target |
 
 ## Quick start
 
@@ -56,7 +55,10 @@ targets.
 sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```
 
-**Build the blink example on AK Embedded Base Kit v3:**
+**The blink LED example on [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu):**
+
+[<img src="https://the-ak-foundation.github.io/akos-docs/02_result.gif" width="480"/>](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu)
+
 ```bash
 git clone https://github.com/the-ak-foundation/akos
 cd akos
@@ -72,11 +74,11 @@ The best starting point is [`examples/README.md`](examples/README.md).
 The current example layout includes:
 
 - [`examples/00-blink`](examples/00-blink) for a minimal bare-metal STM32L1 bring-up
-- static thread registration with `AKOS_THREAD_DEFINE(...)`
-- an example `Makefile` that includes the repo-root `Makefile`
-- an example linker script that includes `kernel/kernel.ld` between flash start
+- Static thread registration with `AKOS_THREAD_DEFINE(...)`
+- An example `Makefile` that includes the repo-root `Makefile`
+- An example linker script that includes `kernel/kernel.ld` between flash start
   and flash end
-- example configuration guidance in `kernel/config.h`
+- Example configuration guidance in `kernel/config.h`
 
 If you are bringing up a new board, start with `examples/00-blink` and adapt the
 board file, linker script, startup file, and `config.h` settings to your target.
