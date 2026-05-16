@@ -1,13 +1,10 @@
-# AKOS — AK Real-Time Operating System
+# AKOS - Real-Time Operating System
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Static Badge](https://img.shields.io/badge/AKOS-User_Manual-red)](https://the-ak-foundation.github.io/akos-docs)
 
-
-AKOS is an open-source preemptive real-time operating system for embedded
-systems. It combines a priority-based scheduler with an event-driven program
-model built around tasks, signals, timers, and state machines.
-
+AKOS is an open-source preemptive real-time operating system designed for learning and reference purposes in embedded systems education. It combines a priority-based scheduler with an event-driven programming model built around tasks, signals, timers, and state machines.
+AKOS helps students understand how an RTOS works internally and serves as a practical reference for those who want to build their own real-time operating system from the ground up.
 
 ## Architecture
 
@@ -76,18 +73,14 @@ The current example layout includes:
 - [`examples/00-blink`](examples/00-blink) for a minimal bare-metal STM32L1 bring-up
 - Static thread registration with `AKOS_THREAD_DEFINE(...)`
 - An example `Makefile` that includes the repo-root `Makefile`
-- An example linker script that includes `kernel/kernel.ld` between flash start
-  and flash end
+- An example linker script that includes `kernel/kernel.ld` between flash start and flash end
 - Example configuration guidance in `kernel/config.h`
 
-If you are bringing up a new board, start with `examples/00-blink` and adapt the
-board file, linker script, startup file, and `config.h` settings to your target.
+If you are bringing up a new board, start with `examples/00-blink` and adapt the board file, linker script, startup file, and `config.h` settings to your target.
 
 ## Contributing
 
-The kernel source uses `akos_` prefixes for public APIs. New code should follow
-the existing naming style and keep board-specific logic in example or platform
-code.
+The kernel source code uses the akos_ prefix for all public APIs. New code should follow the existing naming conventions and keep board-specific logic isolated within example applications or platform-specific implementations.
 
 ## License
 
