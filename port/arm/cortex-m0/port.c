@@ -16,6 +16,7 @@
 #include "core.h"
 #include "core_cm0.h"
 #include "core_cmFunc.h"
+#include "stm32f030x6.h"
 #include "thread.h"
 
 /**
@@ -32,8 +33,8 @@ void akos_port_systick_init_freq(uint32_t cpu_freq)
                     SysTick_CTRL_ENABLE_Msk;
 
     *(volatile uint32_t*)0xE000ED20UL &= ~(0xFFUL << 24);
-    *(volatile uint32_t*)0xE000ED20UL |=
-        ((uint32_t)1u << (8U - __NVIC_PRIO_BITS)) << 24;
+    *(volatile uint32_t*)0xE000ED20UL |= ((1 << __NVIC_PRIO_BITS) - 2)
+                                         << (32 - __NVIC_PRIO_BITS);
 }
 
 /**

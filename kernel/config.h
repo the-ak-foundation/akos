@@ -21,7 +21,7 @@ extern "C"
 #include <stdint.h>
 
 /* Kernel common config */
-#define OS_CFG_SYSTICK_CLOCK_HZ           ((uint32_t)32000000)
+#define OS_CFG_SYSTICK_CLOCK_HZ           ((uint32_t)48000000)
 #define OS_CFG_HEAP_SIZE                  ((size_t)2144U)      /**< Total static heap size in bytes for OS allocator. */
 #define OS_CFG_PRIO_MAX                   (10)                     /**< Number of priority levels (0 .. OS_CFG_PRIO_MAX-1). */
 #define OS_CFG_DELAY_MAX                  ((uint32_t)0xffffffffUL) /**< Maximum delay timeout value (effectively infinite wait). */

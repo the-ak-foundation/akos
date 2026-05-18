@@ -1,4 +1,4 @@
-ROOT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR := $(shell git rev-parse --show-toplevel)
 
 ARCH ?= cortex-m3
 
