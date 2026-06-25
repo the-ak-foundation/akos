@@ -20,6 +20,18 @@
 extern "C" {
 #endif
 
+static inline uint32_t port_get_primask(void)
+{
+    uint32_t primask;
+    __asm volatile("MRS %0, PRIMASK" : "=r"(primask) :: "memory");
+    return primask;
+}
+
+static inline void port_set_primask(uint32_t primask)
+{
+    __asm volatile("MSR PRIMASK, %0" :: "r"(primask) : "memory");
+}
+
 /**
  * @brief Configure SysTick to generate 1ms OS ticks.
  * @param cpu_freq Core clock frequency in Hz.
@@ -44,8 +56,8 @@ uint32_t *akos_port_task_stack_init(uint32_t *p_stack,
                                void (*pf_task)(void *),
                                void *p_arg);
 
-#define port_disable_interrupts             { __asm inline("CPSID   I \n"); }
-#define port_enable_interrupts              { __asm inline("CPSIE   I \n"); }
+#define port_disable_interrupts             { __asm volatile("CPSID I" ::: "memory"); }
+#define port_enable_interrupts              { __asm volatile("CPSIE I" ::: "memory"); }
 
 /* Make PendSV and SysTick the lowest priority interrupts. */
 #define port_setup_PendSV()                 (*(uint32_t volatile *)0xE000ED20 |= (0xFFU << 16))

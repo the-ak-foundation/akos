@@ -2,7 +2,9 @@
 
 This folder is the quickest way to learn how to bring AKOS up on a board.
 Start with [`00-blink`](./00-blink), which is a minimal bare-metal example for
-STM32L1.
+STM32L1. If you want a Cortex-M0 variant, check [`01-blink-cm0`](./01-blink-cm0).
+Then move to [`02-shell-mcuload`](./02-shell-mcuload) for a UART shell plus
+live CPU-load inspection.
 
 ## The AKOS Flow
 
@@ -166,3 +168,13 @@ The current `00-blink` example demonstrates:
 
 That is the recommended pattern for adding new application tasks: make the
 task logic small, register it statically, and let AKOS schedule it.
+
+## Shell Example
+
+[`02-shell-mcuload`](./02-shell-mcuload) builds on the same STM32L1 target and
+adds:
+
+- a direct-register `USART1` console on `PA9`/`PA10`
+- AKOS shell command registration with `AKOS_SHELL_CMD_DEFINE(...)`
+- a `mcuload` sampling command
+- a few background worker threads so the built-in `top` shell view is useful

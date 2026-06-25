@@ -15,8 +15,7 @@
 #include "core.h"
 #include "config.h"
 
-#include "core_cm3.h"
-#include "core_cmFunc.h"
+#include "stm32l1xx.h"
 
 /**
  * @brief Initialize SysTick to generate 1ms OS ticks.

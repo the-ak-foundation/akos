@@ -21,8 +21,8 @@ extern "C"
 #include <stdint.h>
 
 /* Kernel common config */
-#define OS_CFG_SYSTICK_CLOCK_HZ           ((uint32_t)48000000)
-#define OS_CFG_HEAP_SIZE                  ((size_t)2144U)      /**< Total static heap size in bytes for OS allocator. */
+#define OS_CFG_SYSTICK_CLOCK_HZ           ((uint32_t)32000000)
+#define OS_CFG_HEAP_SIZE                  ((size_t)8192U)      /**< Total static heap size in bytes for OS allocator. */
 #define OS_CFG_PRIO_MAX                   (10)                     /**< Number of priority levels (0 .. OS_CFG_PRIO_MAX-1). */
 #define OS_CFG_DELAY_MAX                  ((uint32_t)0xffffffffUL) /**< Maximum delay timeout value (effectively infinite wait). */
 
@@ -37,6 +37,21 @@ extern "C"
 /* Timers config */
 #define OS_CFG_TIMER_POOL_SIZE            (8u) /**< Maximum number of software timers allocatable at runtime. */
 #define OS_CFG_TIMER_TASK_PRI             (0u) /**< Priority for internal timer task (lower value means higher priority). */
+
+/* Shell config */
+#ifndef OS_CFG_USE_SHELL
+#define OS_CFG_USE_SHELL                  (1u) /**< Enable (`1`) or disable (`0`) the built-in AKOS shell thread. */
+#define OS_CFG_SHELL_PROMPT_NAME          "akos:~$ "  /**< Prompt name for the shell. */
+#endif
+
+#define OS_CFG_USE_RUNTIME_STATS          (1u) /**< Enable (`1`) or disable (`0`) runtime statistics and CPU load calculation. */
+
+#define OS_CFG_SHELL_TASK_PRI             (1u)   /**< Priority for the internal shell task. */
+#define OS_CFG_SHELL_TASK_MSG_Q_SIZE      (8u)   /**< Message queue depth for the internal shell task. */
+#define OS_CFG_SHELL_TASK_STK_SIZE        (192u) /**< Stack size in 32-bit words for the internal shell task. */
+#define OS_CFG_SHELL_RX_BUFFER_SIZE       (128u) /**< UART RX ring buffer size in bytes. */
+#define OS_CFG_SHELL_LINE_BUFFER_SIZE     (64u)  /**< Maximum command line length. */
+#define OS_CFG_SHELL_MAX_ARGS             (8u)   /**< Maximum number of parsed arguments per command line. */
 
 /* Log config */
 #ifndef OS_CFG_USE_LOG

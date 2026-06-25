@@ -7,6 +7,7 @@
  */
 
 #include "kernel/inc/core.h"
+#include "kernel/inc/shell.h"
 #include "kernel/inc/thread.h"
 #include "kernel/inc/timer.h"
 #include "kernel/inc/message.h"

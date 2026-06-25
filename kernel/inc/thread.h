@@ -24,14 +24,21 @@ extern "C"
 
 #include "message.h"
 
+#if (OS_CFG_USE_SHELL != 0u)
+#define AKOS_THREAD_NAME_INIT(_name) .name = #_name,
+#else
+#define AKOS_THREAD_NAME_INIT(_name)
+#endif
+
 #define AKOS_THREAD_DEFINE(_name, _id, _entry, _arg, _prio, _queue_size, _stack_size) \
-  const thread_t _name __attribute__((used, section("task_desc"))) = {                \
-      .id = (thread_id_t)(_id),                                                       \
-      .pf_thread = (thread_func_t)(_entry),                                           \
-      .p_arg = (void *)(_arg),                                                        \
-      .prio = (uint8_t)(_prio),                                                       \
-      .queue_size = (size_t)(_queue_size),                                            \
-      .stack_size = (size_t)(_stack_size),                                            \
+  const thread_t _name __attribute__((used, section("task_desc"))) = {                 \
+      AKOS_THREAD_NAME_INIT(_name)                                                     \
+      .id = (thread_id_t)(_id),                                                        \
+      .pf_thread = (thread_func_t)(_entry),                                            \
+      .p_arg = (void *)(_arg),                                                         \
+      .prio = (uint8_t)(_prio),                                                        \
+      .queue_size = (size_t)(_queue_size),                                             \
+      .stack_size = (size_t)(_stack_size),                                             \
   }
 
   /**
@@ -64,12 +71,25 @@ extern "C"
    */
   typedef uint8_t thread_id_t;
 
+  typedef struct
+  {
+#if (OS_CFG_USE_SHELL != 0u)
+    const char *name;
+#endif
+    thread_id_t id;
+    uint8_t prio;
+    uint32_t run_ticks;
+  } thread_runtime_snapshot_t;
+
   /**
    * @struct thread
    * @brief Static thread descriptor used during thread table registration.
    */
   struct thread
   {
+#if (OS_CFG_USE_SHELL != 0u)
+    const char *name;      /**< Display name shown by diagnostic commands. */
+#endif
     thread_id_t id;         /**< Application-level thread ID; keep these dense from 0..N-1. */
     thread_func_t pf_thread; /**< Thread entry function. */
     void *p_arg;            /**< Argument passed to thread entry. */
@@ -106,6 +126,12 @@ extern "C"
    * @return Timer thread ID.
    */
   uint8_t akos_thread_get_timer_thread_id(void);
+
+  /**
+   * @brief Get the runtime thread ID assigned to the shell thread.
+   * @return Shell thread ID.
+   */
+  uint8_t akos_thread_get_shell_thread_id(void);
 
   /**
    * @brief Tick handler routine called from SysTick.
@@ -146,6 +172,26 @@ extern "C"
    * @return Message pointer, or NULL on timeout.
    */
   msg_t *akos_thread_wait_for_msg(uint32_t time_out);
+
+  /**
+   * @brief Snapshot accumulated runtime counters.
+   * @param p_idle_ticks Output accumulated idle-thread runtime in ticks.
+   * @param p_total_ticks Output accumulated runtime of all threads in ticks.
+   */
+  void akos_thread_get_runtime_totals(uint32_t *p_idle_ticks, uint32_t *p_total_ticks);
+
+  /**
+   * @brief Get number of runtime thread slots, including internal threads.
+   * @return Number of valid runtime slots.
+   */
+  uint8_t akos_thread_get_runtime_count(void);
+
+  /**
+   * @brief Snapshot one runtime thread slot by index.
+   * @param index Runtime slot index.
+   * @param p_snapshot Output snapshot. Returns id=`UINT8_MAX` if slot is invalid.
+   */
+  void akos_thread_get_runtime_snapshot(uint8_t index, thread_runtime_snapshot_t *p_snapshot);
 
 #ifdef __cplusplus
 }

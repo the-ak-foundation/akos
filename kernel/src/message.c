@@ -219,10 +219,13 @@ msg_t *akos_message_queue_get(msg_queue_t *p_msg_q)
 {
     msg_t *p_msg;
 
+    AKOS_CORE_ENTER_CRITICAL();
+
     if (p_msg_q->size_curr == 0u)
     {
         // OSUniversalError = OS_ERR_MSG_QUEUE_IS_EMPTY;
         // core_assert(0);
+        AKOS_CORE_EXIT_CRITICAL();
         return NULL;
     }
 
@@ -241,6 +244,7 @@ msg_t *akos_message_queue_get(msg_queue_t *p_msg_q)
         p_msg_q->size_curr--; /* Yes, One less message in the queue */
     }
 
+    AKOS_CORE_EXIT_CRITICAL();
     return (p_msg);
 }
 

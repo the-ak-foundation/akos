@@ -6,6 +6,7 @@
 #include "core.h"
 
 #include "message.h"
+#include "shell.h"
 #include "timer.h"
 #include "priority.h"
 #include "thread.h"
@@ -14,13 +15,18 @@
 #include "port.h"
 
 static uint16_t critical_nesting_count = (uint16_t)0u;
+static uint32_t critical_saved_primask = (uint32_t)0u;
 
 /**
  * @brief Enter nested critical section.
  */
 void akos_core_enter_critical(void)
 {
-    port_disable_interrupts
+    if (critical_nesting_count == 0u)
+    {
+        critical_saved_primask = port_get_primask();
+        port_disable_interrupts
+    }
     critical_nesting_count++;
 }
 
@@ -29,11 +35,16 @@ void akos_core_enter_critical(void)
  */
 void akos_core_exit_critical(void)
 {
-    core_assert(critical_nesting_count, "NESTING CRITICAL UNBALANCED");
+    if (critical_nesting_count == 0u)
+    {
+        core_assert(0, "NESTING CRITICAL UNBALANCED");
+        return;
+    }
+
     critical_nesting_count--;
     if (critical_nesting_count == 0)
     {
-        port_enable_interrupts
+        port_set_primask(critical_saved_primask);
     }
 }
 
@@ -46,6 +57,7 @@ void akos_core_init(void)
     akos_priority_init();
     akos_message_init();
     akos_timer_init();
+    akos_shell_feature_init();
     akos_thread_register_static_threads();
 }
 

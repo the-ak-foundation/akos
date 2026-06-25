@@ -14,6 +14,7 @@
 #include "core.h"
 #include "list.h"
 #include "memory.h"
+#include "shell.h"
 #include "timer.h"
 #include "priority.h"
 #include "port.h"
@@ -54,6 +55,7 @@ extern const thread_t __stop_task_desc[] __attribute__((weak));
 static task_tcb_t **task_tcb_list = NULL; /*< Holds the list of task TCBs. */
 static uint8_t task_tcb_list_len = 0u;
 static uint8_t task_app_count = 0u;
+static uint8_t task_shell_id = UINT8_MAX;
 static uint8_t task_idle_id = 0u;
 static uint8_t task_timer_id = 0u;
 
@@ -76,6 +78,11 @@ uint8_t akos_thread_get_idle_thread_id(void)
     return task_idle_id;
 }
 
+uint8_t akos_thread_get_shell_thread_id(void)
+{
+    return task_shell_id;
+}
+
 uint8_t akos_thread_get_timer_thread_id(void)
 {
     return task_timer_id;
@@ -87,6 +94,8 @@ uint8_t akos_thread_get_timer_thread_id(void)
  */
 static void task_idle_func(void *p_arg)
 {
+    (void)p_arg;
+
     for (;;)
     {
     }
@@ -98,6 +107,8 @@ static void task_idle_func(void *p_arg)
  */
 static void task_timer_func(void *p_arg)
 {
+    (void)p_arg;
+
     for (;;)
     {
         akos_timer_processing();
@@ -116,7 +127,46 @@ struct task_tcb
     thread_id_t id;
     msg_queue_t msg_queue;
     thread_state_t state;         /* States */
+
+    /* Runtime stats */
+    uint32_t run_ticks;        /* accumulated running ticks */
+    uint32_t last_run_ticks;   /* snapshot for load calculation */
+    uint8_t  cpu_load;         /* 0 - 100 percent */
 };
+
+#if (OS_CFG_USE_SHELL != 0u)
+static const char *thread_get_name_by_id(thread_id_t id)
+{
+    const thread_t *p_thread_desc = __start_task_desc;
+
+    for (; p_thread_desc < __stop_task_desc; ++p_thread_desc)
+    {
+        if (p_thread_desc->id == id)
+        {
+            return p_thread_desc->name;
+        }
+    }
+
+    if (id == task_shell_id)
+    {
+        return "shell";
+    }
+    if (id == task_timer_id)
+    {
+        return "timer";
+    }
+    if (id == task_idle_id)
+    {
+        return "idle";
+    }
+
+    return NULL;
+}
+#endif
+
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+static void akos_thread_calculate_cpu_load(void);
+#endif
 
 /**
  * @brief Initialize all scheduler lists.
@@ -270,6 +320,9 @@ static void add_curr_task_to_delay_list(uint32_t tick_to_delay, uint8_t can_bloc
 
     /*Save state*/
     tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+    akos_thread_calculate_cpu_load();
+#endif
 }
 
 /**
@@ -414,16 +467,24 @@ void akos_thread_register_static_threads(void)
         app_count = (size_t)(p_thread_desc_end - p_thread_desc);
     }
 
-    if (app_count > (size_t)(UINT8_MAX - 2u))
+    if (app_count > (size_t)(UINT8_MAX - 3u))
     {
         core_assert(0, "OS_ERR_TOO_MANY_TASKS");
         return;
     }
 
     task_app_count = (uint8_t)app_count;
+#if (OS_CFG_USE_SHELL != 0u)
+    task_shell_id = task_app_count;
+    task_timer_id = (uint8_t)(task_app_count + 1u);
+    task_idle_id = (uint8_t)(task_app_count + 2u);
+    task_tcb_list_len = (uint8_t)(task_app_count + 3u);
+#else
+    task_shell_id = UINT8_MAX;
     task_idle_id = task_app_count;
     task_timer_id = (uint8_t)(task_app_count + 1u);
     task_tcb_list_len = (uint8_t)(task_app_count + 2u);
+#endif
 
     task_tcb_list = (task_tcb_t **)akos_memory_malloc(sizeof(task_tcb_t *) * task_tcb_list_len);
     if (task_tcb_list == NULL)
@@ -449,6 +510,15 @@ void akos_thread_register_static_threads(void)
                           p_thread_desc->stack_size);
     }
 
+#if (OS_CFG_USE_SHELL != 0u)
+    (void)task_create((thread_id_t)task_shell_id,
+                      (thread_func_t)akos_shell_thread,
+                      (void *)NULL,
+                      (uint8_t)OS_CFG_SHELL_TASK_PRI,
+                      (size_t)OS_CFG_SHELL_TASK_MSG_Q_SIZE,
+                      (size_t)OS_CFG_SHELL_TASK_STK_SIZE);
+#endif
+
     (void)task_create((thread_id_t)task_timer_id,
                       (thread_func_t)task_timer_func,
                       (void *)NULL,
@@ -463,6 +533,25 @@ void akos_thread_register_static_threads(void)
                       (size_t)(0u),
                       (size_t)OS_CFG_TASK_STK_SIZE_MIN);
 }
+
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+static void akos_thread_calculate_cpu_load(void)
+{
+    uint32_t current_tick = akos_thread_get_tick();
+
+    if (tcb_curr_ptr != NULL)
+    {
+        tcb_curr_ptr->run_ticks += current_tick - tcb_curr_ptr->last_run_ticks;
+    }
+
+    if (tcb_high_rdy_ptr != NULL) {
+        tcb_high_rdy_ptr->last_run_ticks = current_tick;
+    }
+}
+#endif
+
+
+
 
 /**
  * @brief Tick hook: unblock delayed tasks and select next runnable task.
@@ -529,7 +618,13 @@ uint8_t akos_thread_increment_tick(void)
         is_switch_needed = OS_TRUE;
     }
     /*Save state*/
-    if(is_switch_needed == OS_TRUE) tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
+    if(is_switch_needed == OS_TRUE)
+    {
+        tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+        akos_thread_calculate_cpu_load();
+#endif
+    }
     
     return is_switch_needed;
 }
@@ -559,6 +654,101 @@ void akos_thread_start(void)
     tick_count = 0u;
     next_tick_to_unblock = OS_CFG_DELAY_MAX;
     sched_is_running = OS_TRUE;
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+    if (tcb_curr_ptr != NULL)
+    {
+        tcb_curr_ptr->last_run_ticks = 0u;
+    }
+#endif
+}
+
+void akos_thread_get_runtime_totals(uint32_t *p_idle_ticks, uint32_t *p_total_ticks)
+{
+    if ((p_idle_ticks == NULL) || (p_total_ticks == NULL))
+    {
+        return;
+    }
+
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+    AKOS_CORE_ENTER_CRITICAL();
+    {
+        uint32_t current_tick = tick_count;
+        uint32_t idle_ticks = 0u;
+
+        if (tcb_curr_ptr != NULL)
+        {
+            tcb_curr_ptr->run_ticks += current_tick - tcb_curr_ptr->last_run_ticks;
+            tcb_curr_ptr->last_run_ticks = current_tick;
+        }
+
+        if (task_tcb_list != NULL)
+        {
+            if ((task_idle_id < task_tcb_list_len) && (task_tcb_list[task_idle_id] != NULL))
+            {
+                idle_ticks = task_tcb_list[task_idle_id]->run_ticks;
+            }
+        }
+
+        *p_idle_ticks = idle_ticks;
+        *p_total_ticks = current_tick;
+    }
+    AKOS_CORE_EXIT_CRITICAL();
+#else
+    *p_idle_ticks = 0u;
+    *p_total_ticks = 0u;
+#endif
+}
+
+uint8_t akos_thread_get_runtime_count(void)
+{
+    return task_tcb_list_len;
+}
+
+void akos_thread_get_runtime_snapshot(uint8_t index, thread_runtime_snapshot_t *p_snapshot)
+{
+    if (p_snapshot == NULL)
+    {
+        return;
+    }
+
+    p_snapshot->id = UINT8_MAX;
+#if (OS_CFG_USE_SHELL != 0u)
+    p_snapshot->name = NULL;
+#endif
+    p_snapshot->prio = 0u;
+    p_snapshot->run_ticks = 0u;
+
+    if ((task_tcb_list == NULL) || (index >= task_tcb_list_len) || (task_tcb_list[index] == NULL))
+    {
+        return;
+    }
+
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+    AKOS_CORE_ENTER_CRITICAL();
+    {
+        uint32_t current_tick = tick_count;
+
+        if (tcb_curr_ptr != NULL)
+        {
+            tcb_curr_ptr->run_ticks += current_tick - tcb_curr_ptr->last_run_ticks;
+            tcb_curr_ptr->last_run_ticks = current_tick;
+        }
+
+        p_snapshot->id = task_tcb_list[index]->id;
+#if (OS_CFG_USE_SHELL != 0u)
+        p_snapshot->name = thread_get_name_by_id(task_tcb_list[index]->id);
+#endif
+        p_snapshot->prio = task_tcb_list[index]->prio;
+        p_snapshot->run_ticks = task_tcb_list[index]->run_ticks;
+    }
+    AKOS_CORE_EXIT_CRITICAL();
+#else
+    p_snapshot->id = task_tcb_list[index]->id;
+#if (OS_CFG_USE_SHELL != 0u)
+    p_snapshot->name = thread_get_name_by_id(task_tcb_list[index]->id);
+#endif
+    p_snapshot->prio = task_tcb_list[index]->prio;
+#endif
 }
 
 /**
@@ -607,6 +797,9 @@ void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_co
             /*Save state*/
             tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
 
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+            akos_thread_calculate_cpu_load();
+#endif
             port_trigger_PendSV();
         }
         AKOS_CORE_EXIT_CRITICAL();
@@ -631,6 +824,9 @@ void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_co
             /*Save state*/
             tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
 
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+            akos_thread_calculate_cpu_load();
+#endif
             port_trigger_PendSV();
         }
         AKOS_CORE_EXIT_CRITICAL();
@@ -687,6 +883,9 @@ void akos_thread_post_msg_pure(uint8_t des_thread_id, int32_t sig)
             /*Save state*/
             tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
 
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+            akos_thread_calculate_cpu_load();
+#endif
             port_trigger_PendSV();
         }
         AKOS_CORE_EXIT_CRITICAL();
@@ -715,6 +914,9 @@ void akos_thread_post_msg_pure(uint8_t des_thread_id, int32_t sig)
             /*Save state*/
             tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
 
+#if (OS_CFG_USE_RUNTIME_STATS != 0u)
+            akos_thread_calculate_cpu_load();
+#endif
             port_trigger_PendSV();
         }
         AKOS_CORE_EXIT_CRITICAL();

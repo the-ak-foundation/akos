@@ -67,6 +67,8 @@ void *akos_memory_malloc(size_t size)
 	uint8_t *p_return = NULL;
 	mem_blk_header_t *p_block = &mem_blk_start;
 
+	AKOS_CORE_ENTER_CRITICAL();
+
 	/* Must check the end pointer first */
 	if (mem_blk_end_ptr == NULL)
 	{
@@ -78,6 +80,7 @@ void *akos_memory_malloc(size_t size)
 	if ((size == 0) || (size > byte_available))
 	{
 		core_assert(0, "OS_ERR_MEM_INVALID_SIZE");
+		AKOS_CORE_EXIT_CRITICAL();
 		return (void *)p_return;
 	}
 
@@ -100,6 +103,7 @@ void *akos_memory_malloc(size_t size)
 	if ((p_block->state == MEM_STATE_BUSY) || (p_block->size < size))
 	{
 		core_assert(0, "OS_ERR_MEM_NO_BLOCK");
+		AKOS_CORE_EXIT_CRITICAL();
 		return (void *)p_return;
 	}
 
@@ -129,6 +133,7 @@ void *akos_memory_malloc(size_t size)
 	}
 
 
+	AKOS_CORE_EXIT_CRITICAL();
 	return (void *)p_return;
 }
 
@@ -138,15 +143,19 @@ void *akos_memory_malloc(size_t size)
  */
 void akos_memory_free(void *p_addr)
 {
+	AKOS_CORE_ENTER_CRITICAL();
+
 	if ((mem_blk_end_ptr == NULL))
 	{
 		core_assert(0, "OS_ERR_MEM_LIST_IS_EMPTY");
+		AKOS_CORE_EXIT_CRITICAL();
 		return;
 	}
 
 	if (p_addr == NULL)
 	{
 		core_assert(0, "OS_ERR_MEM_INVALID_ADDRESS");
+		AKOS_CORE_EXIT_CRITICAL();
 		return;
 	}
 
@@ -159,6 +168,7 @@ void akos_memory_free(void *p_addr)
 	if (is_above_heap_end || is_below_heap_start)
 	{
 		core_assert(0, "OS_ERR_MEM_INVALID_ADDRESS");
+		AKOS_CORE_EXIT_CRITICAL();
 		return;
 	}
 
@@ -175,12 +185,14 @@ void akos_memory_free(void *p_addr)
 	if (p_block_temp != p_block)
 	{
 		core_assert(0, "OS_ERR_MEM_INVALID_ADDRESS");
+		AKOS_CORE_EXIT_CRITICAL();
 		return;
 	}
 
 	if (p_block_temp->state == MEM_STATE_FREE)
 	{
 		core_assert(0, "OS_ERR_MEM_DOUBLE_FREE");
+		AKOS_CORE_EXIT_CRITICAL();
 		return;
 	}
 
@@ -211,4 +223,6 @@ void akos_memory_free(void *p_addr)
 		p_prev_block->size += p_block_temp->size + SIZE_OF_BLOCK_HEADER;
 		p_prev_block->next_ptr = p_block_temp->next_ptr;
 	}
+
+	AKOS_CORE_EXIT_CRITICAL();
 }
