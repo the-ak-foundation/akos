@@ -1,7 +1,5 @@
-build/
 .cache/
 *.elf
-*.bin
 *.map
 *.d
 *.o
@@ -13,3 +11,8 @@ cmake_install.cmake
 .idea/
 *.swp
 *~
+
+# Examples build outputs
+_build/*/objects/
+!examples/*/_build/*/images/*.bin
+!examples/*/_build/*/images/*.hex
