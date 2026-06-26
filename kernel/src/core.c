@@ -1,20 +1,30 @@
 /**
- * @file core.c
- * @brief Kernel initialization, startup and critical-section control.
- */
+  ******************************************************************************
+  * @file    core.c
+  * @brief   Kernel initialization, startup and critical-section control.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
 #include "core.h"
-
+#include "config.h"
+#include "log.h"
 #include "message.h"
-#include "timer.h"
+#include "port.h"
 #include "priority.h"
 #include "thread.h"
-#include "log.h"
-#include "config.h"
-#include "port.h"
+#include "timer.h"
 
+/* Private variables ---------------------------------------------------------*/
 static uint16_t critical_nesting_count = (uint16_t)0u;
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Enter nested critical section.
  */

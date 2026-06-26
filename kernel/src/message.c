@@ -1,26 +1,33 @@
-/****************************************************************************/
-/*!
- * @file	message.c
- * @brief	Message pool and queue implementation.
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    message.c
+  * @brief   Message pool and queue implementation.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
+#include "core.h"
 #include "message.h"
 #include "memory.h"
-#include "core.h"
 
 #include <stdint.h>
 #include <string.h>
 
+/* Private variables ---------------------------------------------------------*/
 static msg_t msg_pool[OS_CFG_MSG_POOL_SIZE];
 static msg_t *free_list_msg_pool;
 static uint8_t msg_pool_used;
 
+/* Private function prototypes ----------------------------------------------*/
+static void msg_pool_init(void);
+
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize free-list of preallocated message objects.
  */
@@ -47,6 +54,7 @@ static void msg_pool_init(void)
 
     AKOS_CORE_EXIT_CRITICAL();
 }
+
 /**
  * @brief Initialize message subsystem.
  */
@@ -80,7 +88,7 @@ void akos_message_free(msg_t *p_msg)
  * @param size Maximum queue length.
  */
 void akos_message_queue_init(msg_queue_t *p_msg_q,
-                       uint8_t size)
+                             uint8_t size)
 {
     p_msg_q->head_ptr = NULL;
     p_msg_q->tail_ptr = NULL;
@@ -96,9 +104,9 @@ void akos_message_queue_init(msg_queue_t *p_msg_q,
  * @param size Payload size in bytes.
  */
 void akos_message_queue_put_dynamic(msg_queue_t *p_msg_q,
-                              int32_t sig,
-                              void *p_content,
-                              uint8_t size)
+                                    int32_t sig,
+                                    void *p_content,
+                                    uint8_t size)
 {
     AKOS_CORE_ENTER_CRITICAL();
     msg_t *p_msg;
@@ -251,7 +259,7 @@ msg_t *akos_message_queue_get(msg_queue_t *p_msg_q)
  * @return Payload pointer.
  */
 void *akos_message_get_dynamic_data(msg_t *p_msg,
-                              uint8_t *p_msg_size)
+                                    uint8_t *p_msg_size)
 {
     *p_msg_size = p_msg->size;
     return p_msg->content_ptr;

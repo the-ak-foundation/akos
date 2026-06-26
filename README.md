@@ -44,7 +44,9 @@ AKOS helps students understand how an RTOS works internally and serves as a prac
 
 | Board | MCU | Status |
 |-------|-----|--------|
-| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151C8T6 (ARM Cortex-M3) | Primary target |
+| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target |
+| STM32F030F4P6 board | STM32F030F4P6 (ARM Cortex-M0) | Example target |
+| TI LP-MSPM0C1104 LaunchPad | MSPM0C1104 (ARM Cortex-M0+) | Example target |
 
 ## Quick start
 
@@ -60,9 +62,9 @@ sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```bash
 git clone https://github.com/the-ak-foundation/akos
 cd akos
-cd examples/00-blink
-make
-make flash
+make -C examples/ARM/cortex-m3/STM32L151CBT6 help
+make -C examples/ARM/cortex-m3/STM32L151CBT6 clean all
+make -C examples/ARM/cortex-m3/STM32L151CBT6 flash
 ```
 
 ## Examples
@@ -71,13 +73,15 @@ The best starting point is [`examples/README.md`](examples/README.md).
 
 The current example layout includes:
 
-- [`examples/00-blink`](examples/00-blink) for a minimal bare-metal STM32L1 bring-up
+- [`examples/ARM/cortex-m3/STM32L151CBT6`](examples/ARM/cortex-m3/STM32L151CBT6) for the STM32L151 Cortex-M3 target
+- [`examples/ARM/cortex-m0/STM32F030F4P6`](examples/ARM/cortex-m0/STM32F030F4P6) for STM32F030 Cortex-M0 examples
+- [`examples/ARM/cortex-m0/LP-MSPM0C1104`](examples/ARM/cortex-m0/LP-MSPM0C1104) for the TI MSPM0C1104 Cortex-M0+ example
 - Static thread registration with `AKOS_THREAD_DEFINE(...)`
-- An example `Makefile` that includes the repo-root `Makefile`
-- An example linker script that includes `kernel/kernel.ld` between flash start and flash end
-- Example configuration guidance in `kernel/config.h`
+- Board `Makefile` files that include `kernel/kernel.mk`
+- Board linker scripts that include `kernel.ld` between flash start and flash end
+- Example configuration guidance in `kernel/config.mk` and `kernel/inc/config.h`
 
-If you are bringing up a new board, start with `examples/00-blink` and adapt the board file, linker script, startup file, and `config.h` settings to your target.
+If you are bringing up a new board, start from the closest board folder under `examples/ARM`, then adapt the platform files, linker script, startup file, and kernel config settings to your target.
 
 ## Contributing
 

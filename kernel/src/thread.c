@@ -1,62 +1,86 @@
-/****************************************************************************/
-/*!
- * @file	thread.c
- * @brief	Thread management, scheduling, and thread messaging integration.
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    thread.c
+  * @brief   Thread management, scheduling, and thread messaging integration.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
-#include "thread.h"
+/* Includes ------------------------------------------------------------------*/
 #include "core.h"
 #include "list.h"
 #include "memory.h"
-#include "timer.h"
-#include "priority.h"
 #include "port.h"
+#include "priority.h"
+#include "thread.h"
+#include "timer.h"
+
 #include <string.h>
 
+/* Defines -------------------------------------------------------------------*/
 #define TASK_IDLE_PRI               (OS_CFG_PRIO_MAX - 1u)
-
-#define TASK_TIMER_PRI              ((uint8_t)OS_CFG_TIMER_TASK_PRI) 
-
-#define TASK_TIMER_STK_SIZE         (100u) 
-
-
-typedef struct task_tcb task_tcb_t;
-
+#define TASK_TIMER_PRI              ((uint8_t)OS_CFG_TIMER_TASK_PRI)
+#define TASK_TIMER_STK_SIZE         (100u)
 #define SIZE_OF_TCB                 (sizeof(task_tcb_t))
 
+/* Typedefs ------------------------------------------------------------------*/
+typedef struct task_tcb task_tcb_t;
 
+/* Structs -------------------------------------------------------------------*/
+/**
+ * @struct task_tcb
+ * @brief Internal task control block.
+ */
+struct task_tcb
+{
+    volatile uint32_t *stk_ptr;  /**< Stack pointer, must be the first TCB member. */
+    list_item_t state_list_item; /**< Item in ready, blocked, or suspended state list. */
+    list_item_t event_list_item; /**< Item in event/message wait list. */
+    uint32_t *stk_limit_ptr;     /**< Stack watermark limit pointer. */
+    uint8_t prio;                /**< Scheduler priority. */
+    size_t stk_size;             /**< Task stack size in stack elements. */
+    uint32_t *stk_base_ptr;      /**< Stack base address. */
+    thread_id_t id;              /**< Thread identifier. */
+    msg_queue_t msg_queue;       /**< Thread message queue. */
+    thread_state_t state;        /**< Runtime thread state. */
+};
+
+/* Exported variables --------------------------------------------------------*/
 task_tcb_t *volatile tcb_curr_ptr = NULL;
 task_tcb_t *volatile tcb_high_rdy_ptr = NULL;
 
-static list_t rdy_task_list[OS_CFG_PRIO_MAX];       /*< Prioritised ready tasks. */
-static list_t dly_task_list_1;                      /*< Delayed tasks. */
-static list_t dly_task_list_2;                      /*< Delayed tasks (two lists are used - one for delays that have overflowed the current tick count. */
-static list_t *volatile dly_task_list_ptr;          /*< Points to the delayed task list currently being used. */
-static list_t *volatile overflow_dly_task_list_ptr; /*< Points to the delayed task list currently being used to hold tasks that have overflowed the current tick count. */
-static list_t suspended_task_list;                  /*< Tasks that are currently suspended. */
+/* Private variables ---------------------------------------------------------*/
+static list_t rdy_task_list[OS_CFG_PRIO_MAX];       /**< Prioritised ready tasks. */
+static list_t dly_task_list_1;                      /**< Delayed tasks. */
+static list_t dly_task_list_2;                      /**< Delayed tasks that have overflowed the current tick count. */
+static list_t *volatile dly_task_list_ptr;          /**< Points to the delayed task list currently being used. */
+static list_t *volatile overflow_dly_task_list_ptr; /**< Points to the delayed task list currently being used to hold overflowed tasks. */
+static list_t suspended_task_list;                  /**< Tasks that are currently suspended. */
 
 static volatile uint16_t num_of_tasks           = (uint16_t)0U;
 static volatile uint32_t tick_count             = (uint32_t)0u;
 static volatile uint32_t ticks_pended           = (uint32_t)0U;
-static volatile uint32_t next_tick_to_unblock   = (uint32_t)OS_CFG_DELAY_MAX; /* Initialised to portMAX_DELAY before the scheduler starts. */
+static volatile uint32_t next_tick_to_unblock   = (uint32_t)OS_CFG_DELAY_MAX; /**< Initialised to portMAX_DELAY before the scheduler starts. */
 
 static volatile uint8_t sched_is_running        = (uint8_t)OS_FALSE;
 
+/* Extern variables ----------------------------------------------------------*/
 extern const thread_t __start_task_desc[] __attribute__((weak));
 extern const thread_t __stop_task_desc[] __attribute__((weak));
 
-static task_tcb_t **task_tcb_list = NULL; /*< Holds the list of task TCBs. */
+/* Private variables ---------------------------------------------------------*/
+static task_tcb_t **task_tcb_list = NULL; /**< Holds the list of task TCBs. */
 static uint8_t task_tcb_list_len = 0u;
 static uint8_t task_app_count = 0u;
 static uint8_t task_idle_id = 0u;
 static uint8_t task_timer_id = 0u;
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Get current tick counter.
  * @return Current tick value.
@@ -66,16 +90,28 @@ uint32_t akos_thread_get_tick(void)
     return tick_count;
 }
 
+/**
+ * @brief Get number of application threads.
+ * @return Number of application threads.
+ */
 uint8_t akos_thread_get_app_thread_count(void)
 {
     return task_app_count;
 }
 
+/**
+ * @brief Get idle thread ID.
+ * @return Idle thread ID.
+ */
 uint8_t akos_thread_get_idle_thread_id(void)
 {
     return task_idle_id;
 }
 
+/**
+ * @brief Get timer thread ID.
+ * @return Timer thread ID.
+ */
 uint8_t akos_thread_get_timer_thread_id(void)
 {
     return task_timer_id;
@@ -87,6 +123,8 @@ uint8_t akos_thread_get_timer_thread_id(void)
  */
 static void task_idle_func(void *p_arg)
 {
+    (void)p_arg;
+
     for (;;)
     {
     }
@@ -98,25 +136,13 @@ static void task_idle_func(void *p_arg)
  */
 static void task_timer_func(void *p_arg)
 {
+    (void)p_arg;
+
     for (;;)
     {
         akos_timer_processing();
     }
 }
-
-struct task_tcb
-{
-    volatile uint32_t *stk_ptr;  /* Stack pointer, has to be the first member of TCB        */
-    list_item_t state_list_item; /*Item in StateList include Ready, Blocked, Suspended List */
-    list_item_t event_list_item; /*Item in Event List */
-    uint32_t *stk_limit_ptr;     /* Pointer used to set stack 'watermark' limit             */
-    uint8_t prio;
-    size_t stk_size;            /* Size of task stack (in number of stack elements)         */
-    uint32_t *stk_base_ptr;     /* Pointer to base address of stack 					    */
-    thread_id_t id;
-    msg_queue_t msg_queue;
-    thread_state_t state;         /* States */
-};
 
 /**
  * @brief Initialize all scheduler lists.
@@ -140,7 +166,7 @@ static void init_task_lists(void)
 /**
  * @brief Swap active and overflow delay lists on tick wrap.
  */
-static void task_switch_delay_lists()
+static void task_switch_delay_lists(void)
 {
     list_t *p_list_temp;
     p_list_temp = dly_task_list_ptr;
@@ -323,7 +349,6 @@ static task_tcb_t *task_create(thread_id_t id,
         core_assert(0, "OS_ERR_TASK_ID_ALREADY_USED");
         return NULL;
     }
-    
 
     task_tcb_t *p_new_tcb;
     uint32_t *p_stack;
@@ -362,9 +387,9 @@ static task_tcb_t *task_create(thread_id_t id,
 
     /*Init stack frame*/
     p_stack_ptr = akos_port_task_stack_init(p_stack,
-                                       stack_size,
-                                       pf_thread,
-                                       p_arg);
+                                            stack_size,
+                                            pf_thread,
+                                            p_arg);
 
     /*Save top of stack (Stack pointer)*/
     p_new_tcb->stk_ptr = p_stack_ptr;
@@ -529,8 +554,11 @@ uint8_t akos_thread_increment_tick(void)
         is_switch_needed = OS_TRUE;
     }
     /*Save state*/
-    if(is_switch_needed == OS_TRUE) tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
-    
+    if (is_switch_needed == OS_TRUE)
+    {
+        tcb_high_rdy_ptr->state = THREAD_STATE_RUNNING;
+    }
+
     return is_switch_needed;
 }
 
@@ -589,9 +617,9 @@ void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_co
     {
     case THREAD_STATE_SUSPENDED_ON_MSG:
         akos_message_queue_put_dynamic(&(task_tcb_list[des_thread_id]->msg_queue),
-                                 sig,
-                                 p_content,
-                                 msg_size);
+                                       sig,
+                                       p_content,
+                                       msg_size);
 
         /* Is the thread waiting on an event ?  If so remove
          * it from the event list. */
@@ -613,9 +641,9 @@ void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_co
         break;
     case THREAD_STATE_DELAYED_ON_MSG:
         akos_message_queue_put_dynamic(&(task_tcb_list[des_thread_id]->msg_queue),
-                                 sig,
-                                 p_content,
-                                 msg_size);
+                                       sig,
+                                       p_content,
+                                       msg_size);
         /* Is the thread waiting on an event ?  If so remove
          * it from the event list. */
         if (list_item_get_list_contain(&(task_tcb_list[des_thread_id]->state_list_item)) != NULL)
@@ -638,9 +666,9 @@ void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_co
 
     default:
         akos_message_queue_put_dynamic(&(task_tcb_list[des_thread_id]->msg_queue),
-                                 sig,
-                                 p_content,
-                                 msg_size);
+                                       sig,
+                                       p_content,
+                                       msg_size);
         AKOS_CORE_EXIT_CRITICAL();
         break;
     }

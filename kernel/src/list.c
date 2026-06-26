@@ -1,18 +1,21 @@
-/****************************************************************************/
-/*!
- * @file	list.c
- * @brief	Doubly-linked list primitives used by scheduler and timers.
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    list.c
+  * @brief   Doubly-linked list primitives used by scheduler and timers.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
 #include "config.h"
 #include "list.h"
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize list sentinel and metadata.
  * @param p_list List object.
@@ -83,6 +86,7 @@ list_item_t *akos_list_item_get_next(list_item_t *p_list_item)
     else
         return (p_list_item)->next_ptr->next_ptr;
 }
+
 /**
  * @brief Get previous item, skipping list end marker.
  * @param p_list_item Current list item.

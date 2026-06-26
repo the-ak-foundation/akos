@@ -1,39 +1,48 @@
-/****************************************************************************/
-/*!
- * @file	timer.c
- * @brief	Software timer pool, lists, and processing loop.
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    timer.c
+  * @brief   Software timer pool, lists, and processing loop.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
 #include "core.h"
+#include "list.h"
+#include "message.h"
 #include "timer.h"
 #include "thread.h"
-#include "message.h"
-#include "list.h"
 
-static ak_timer_t timer_pool[OS_CFG_TIMER_POOL_SIZE];
-static ak_timer_t *free_list_timer_pool;
-static uint8_t timer_pool_used;
+/* Private variables ---------------------------------------------------------*/
+static ak_timer_t timer_pool[OS_CFG_TIMER_POOL_SIZE]; /**< Static software timer pool. */
+static ak_timer_t *free_list_timer_pool;              /**< Free-list head for timer pool. */
+static uint8_t timer_pool_used;                       /**< Number of allocated timer objects. */
 
-static uint32_t timer_counter;
+static list_t timer_list_1;                           /**< Active timer list. */
+static list_t timer_list_2;                           /**< Overflow timer list. */
 
-static list_t timer_list_1;
-static list_t timer_list_2;
+static list_t *volatile timer_list_ptr;               /**< Points to the timer list currently being used. */
+static list_t *volatile overflow_timer_list_ptr;      /**< Points to the timer list currently being used to hold overflowed timers. */
 
-static list_t *volatile timer_list_ptr; /* Current */
-static list_t *volatile overflow_timer_list_ptr;
+static volatile uint32_t next_tick_to_unblock_timer = (uint32_t)OS_CFG_DELAY_MAX; /**< Next timer unblock tick. */
 
-static volatile uint32_t next_tick_to_unblock_timer = (uint32_t)OS_CFG_DELAY_MAX;
+/* Private function prototypes ----------------------------------------------*/
+static void timer_pool_init(void);
+static void init_timer_lists(void);
+static void timer_switch_lists(void);
+static void add_timer_to_list(ak_timer_t *p_timer);
+static void update_next_tick_to_unblock(void);
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize timer object free-list.
  */
-static void timer_pool_init()
+static void timer_pool_init(void)
 {
     uint8_t index;
 
@@ -70,7 +79,7 @@ static void init_timer_lists(void)
 /**
  * @brief Swap active and overflow timer lists on tick wrap.
  */
-static void timer_switch_lists()
+static void timer_switch_lists(void)
 {
     list_t *p_list_temp;
     p_list_temp = timer_list_ptr;
@@ -86,6 +95,7 @@ static void timer_switch_lists()
         next_tick_to_unblock_timer = 0u;
     }
 }
+
 /**
  * @brief Insert timer into active or overflow list by trigger tick.
  * @param p_timer Timer object.
@@ -111,10 +121,11 @@ static void add_timer_to_list(ak_timer_t *p_timer)
     }
     AKOS_CORE_EXIT_CRITICAL();
 }
+
 /**
  * @brief Recompute next timer-unblock tick.
  */
-static void update_next_tick_to_unblock()
+static void update_next_tick_to_unblock(void)
 {
     ak_timer_t *p_timer;
     uint32_t item_value;
@@ -204,6 +215,7 @@ ak_timer_t *akos_timer_create(timer_id_t id, int32_t sig, timer_cb func_cb, uint
     // akos_thread_post_msg_pure(OS_CFG_TIMER_TASK_ID, TIMER_CMD_UPDATE);
     return p_timer;
 }
+
 /**
  * @brief Remove timer from lists and return it to pool.
  * @param p_timer Timer object.
@@ -223,7 +235,9 @@ void akos_timer_remove(ak_timer_t *p_timer)
     timer_pool_used--;
 
     if (list_item_get_list_contain(&(p_timer->timer_list_item)) != NULL)
+    {
         akos_list_remove(&(p_timer->timer_list_item));
+    }
 
     AKOS_CORE_EXIT_CRITICAL();
 }
@@ -238,13 +252,14 @@ void akos_timer_init(void)
     next_tick_to_unblock_timer = OS_CFG_DELAY_MAX;
     /*TODO: Create a thread for timer here, or maybe in thread.c and call akos_timer_processing*/
 }
+
 /**
  * @brief Timer-task processing function.
  *
  * Processes expired timers, executes callbacks/posts signals, then blocks
  * until the next timer event (or a wakeup message).
  */
-void akos_timer_processing()
+void akos_timer_processing(void)
 {
     msg_t *p_msg;
     ak_timer_t *p_timer;
@@ -278,16 +293,22 @@ void akos_timer_processing()
                 akos_list_remove(&(p_timer->timer_list_item));
 
                 if (p_timer->func_cb != NULL)
+                {
                     p_timer->func_cb();
+                }
                 else
+                {
                     akos_thread_post_msg_pure(p_timer->des_thread_id, p_timer->sig);
+                }
                 if (p_timer->period != 0)
                 {
                     list_item_set_value(&(p_timer->timer_list_item), p_timer->period + time_now);
                     add_timer_to_list(p_timer);
                 }
                 else
+                {
                     akos_timer_remove(p_timer); /* One shot */
+                }
                 update_next_tick_to_unblock();
             }
         }
@@ -295,7 +316,9 @@ void akos_timer_processing()
     last_time = time_now;
     p_msg = akos_thread_wait_for_msg(next_tick_to_unblock_timer - time_now);
     if (p_msg != NULL)
+    {
         akos_message_free(p_msg);
+    }
 }
 
 /**
@@ -334,7 +357,9 @@ void akos_timer_reset(ak_timer_t *p_timer)
         add_timer_to_list(p_timer);
     }
     else
+    {
         akos_timer_remove(p_timer); /* One shot */
+    }
     update_next_tick_to_unblock();
     akos_thread_post_msg_pure(akos_thread_get_timer_thread_id(), 0); // Dummy signal
 }

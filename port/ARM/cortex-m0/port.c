@@ -1,24 +1,28 @@
-/****************************************************************************/
-/*!
- * @file	port.c
- * @brief	Cortex-M3 port implementation (context switching and tick hook).
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    port.c
+  * @brief   Cortex-M0 port implementation, context switching and tick hook.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026-06-11
+  * @date    Updated: 2026-06-26
+  *
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
 #include "port.h"
-
 #include "config.h"
 #include "core.h"
+#ifndef AKOS_PORT_USE_DEVICE_CMSIS
 #include "core_cm0.h"
 #include "core_cmFunc.h"
 #include "stm32f030x6.h"
+#endif
 #include "thread.h"
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize SysTick to generate 1ms OS ticks.
  * @param cpu_freq Core clock frequency in Hz.
@@ -32,9 +36,9 @@ void akos_port_systick_init_freq(uint32_t cpu_freq)
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk |
                     SysTick_CTRL_ENABLE_Msk;
 
-    *(volatile uint32_t*)0xE000ED20UL &= ~(0xFFUL << 24);
-    *(volatile uint32_t*)0xE000ED20UL |= ((1 << __NVIC_PRIO_BITS) - 2)
-                                         << (32 - __NVIC_PRIO_BITS);
+    *(volatile uint32_t *)0xE000ED20UL &= ~(0xFFUL << 24);
+    *(volatile uint32_t *)0xE000ED20UL |= ((1 << __NVIC_PRIO_BITS) - 2)
+                                          << (32 - __NVIC_PRIO_BITS);
 }
 
 /**
@@ -66,13 +70,15 @@ void akos_port_start_first_task(void)
  * @param p_arg Task argument.
  * @return Initial top-of-stack pointer.
  */
-uint32_t* akos_port_task_stack_init(uint32_t* p_stack, size_t stack_size,
-                                    void (*pf_task)(void*), void* p_arg)
+uint32_t *akos_port_task_stack_init(uint32_t *p_stack,
+                                    size_t stack_size,
+                                    void (*pf_task)(void *),
+                                    void *p_arg)
 {
-    uint32_t* p_stack_ptr;
+    uint32_t *p_stack_ptr;
 
     p_stack_ptr = &p_stack[stack_size - (uint32_t)1];
-    p_stack_ptr = (uint32_t*)(((uint32_t)p_stack_ptr) & (~((uint32_t)0x007)));
+    p_stack_ptr = (uint32_t *)(((uint32_t)p_stack_ptr) & (~((uint32_t)0x007)));
 
     *(--p_stack_ptr) = (uint32_t)0x01000000UL;
     *(--p_stack_ptr) = ((uint32_t)pf_task) & ((uint32_t)0xfffffffeUL);
@@ -85,7 +91,8 @@ uint32_t* akos_port_task_stack_init(uint32_t* p_stack, size_t stack_size,
 }
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /**
  * @brief SVC handler used to restore the first thread context.
@@ -128,7 +135,8 @@ void port_SVCHandler(void)
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /**
  * @brief PendSV handler used for context switching between threads.
@@ -202,16 +210,17 @@ void port_PendSVHandler(void)
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /**
  * @brief SysTick ISR hook for scheduler tick updates.
  */
-void port_SysTickHandler()
+void port_SysTickHandler(void)
 {
     port_disable_interrupts
-        /* Increment the RTOS tick. */
-        if (akos_thread_increment_tick() == OS_TRUE)
+    /* Increment the RTOS tick. */
+    if (akos_thread_increment_tick() == OS_TRUE)
     {
         /* A context switch is required.  Context switching is performed in
          * the PendSV interrupt.  Pend the PendSV interrupt. */

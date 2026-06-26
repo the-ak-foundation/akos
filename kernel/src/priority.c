@@ -1,30 +1,37 @@
-/****************************************************************************/
-/*!
- * @file	priority.c
- * @brief	Priority bitmap operations.
- *
- * @author	Snoopy3921 - AK Foundation
- *
- * @date	2026/05/08
- *
- * @module	AKOS
- */
+/**
+  ******************************************************************************
+  * @file    priority.c
+  * @brief   Priority bitmap operations.
+  *
+  * @author  Snoopy3921 - AK Foundation
+  * @date    Created: 2026/05/08
+  * @date    Updated: 2026-06-26
+  * 
+  * @module  AKOS
+  ******************************************************************************
+  */
 
+/* Includes ------------------------------------------------------------------*/
 #include "priority.h"
+
+/* Private variables ---------------------------------------------------------*/
 static uint32_t prio_curr;
 static uint8_t prio_tbl[OS_PRIO_TBL_SIZE];
 
+/* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize ready-priority bitmap table.
  */
-void akos_priority_init()
+void akos_priority_init(void)
 {
     uint8_t i;
+
     for (i = 0u; i < OS_PRIO_TBL_SIZE; i++)
     {
         prio_tbl[i] = 0u;
     }
-    /* OS_CFG_PRIO_MAX-1 is the lowest priority level and that is idle task's prio     */
+
+    /* OS_CFG_PRIO_MAX-1 is the lowest priority level and that is idle task's prio. */
     akos_priority_insert(OS_CFG_PRIO_MAX - 1);
 }
 
@@ -68,8 +75,10 @@ uint32_t akos_priority_get_highest(void)
     prio = 0u;
     p_tbl = &prio_tbl[0];
     while (*p_tbl == 0u)
-    {                 /* Search the bitmap table for the highest priority     */
-        prio += (8u); /* Compute the step of each CPU_DATA entry              */
+    {                 
+        /* Search the bitmap table for the highest priority     */
+        /* Compute the step of each CPU_DATA entry              */
+        prio += (8u); 
         p_tbl++;
     }
 

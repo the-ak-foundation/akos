@@ -1,5 +1,7 @@
 .cache/
 *.elf
+*.bin
+*.hex
 *.map
 *.d
 *.o
@@ -13,6 +15,6 @@ cmake_install.cmake
 *~
 
 # Examples build outputs
-_build/*/objects/
-!examples/*/_build/*/images/*.bin
-!examples/*/_build/*/images/*.hex
+examples/**/_build/*/objects/
+!examples/**/_build/*/images/*.bin
+!examples/**/_build/*/images/*.hex
