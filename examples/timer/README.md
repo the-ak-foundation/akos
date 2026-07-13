@@ -2,6 +2,7 @@
 
 The application creates a periodic 500-tick timer. Each expiration posts a
 signal to the application task, which toggles the LED and waits again.
+The activation bar shows which task is currently running.
 
 ```mermaid
 sequenceDiagram
@@ -16,22 +17,28 @@ sequenceDiagram
     Main->>Kernel: akos_core_run()
 
     Kernel->>App: Start application task
+    activate App
     App->>Timer: akos_timer_create(period=500)
     Timer-->>App: Timer handle
     App->>Timer: akos_timer_start(delay=500)
     App->>Queue: akos_thread_wait_for_msg(FOREVER)
     App->>Kernel: Block on message
+    deactivate App
 
     Note over Kernel,Timer: Tick 500: periodic timer expires
     Kernel->>Timer: Run timer task
+    activate Timer
     Timer->>Queue: Post signal 1
     Queue->>Kernel: Application task becomes ready
+    deactivate Timer
     Kernel->>App: Schedule application task
+    activate App
     Queue-->>App: Return timer message
     App->>Board: Toggle LED
     App->>Queue: Free message
     App->>Queue: Wait for next expiration
     App->>Kernel: Block on message
+    deactivate App
 
     Note over Timer,App: The same flow repeats every 500 ticks
 ```
