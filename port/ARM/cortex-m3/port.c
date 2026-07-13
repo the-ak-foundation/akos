@@ -17,8 +17,12 @@
 #include "core.h"
 #include "thread.h"
 
+#ifdef AKOS_PORT_DEVICE_HEADER
+#include AKOS_PORT_DEVICE_HEADER
+#else
 #include "core_cm3.h"
 #include "core_cmFunc.h"
+#endif
 
 /* Function definitions ------------------------------------------------------*/
 /**

@@ -15,10 +15,11 @@
 #include "port.h"
 #include "config.h"
 #include "core.h"
-#ifndef AKOS_PORT_USE_DEVICE_CMSIS
+#ifdef AKOS_PORT_DEVICE_HEADER
+#include AKOS_PORT_DEVICE_HEADER
+#else
 #include "core_cm0.h"
 #include "core_cmFunc.h"
-#include "stm32f030x6.h"
 #endif
 #include "thread.h"
 

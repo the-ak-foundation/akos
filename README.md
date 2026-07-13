@@ -62,26 +62,20 @@ sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```bash
 git clone https://github.com/the-ak-foundation/akos
 cd akos
-make -C examples/ARM/cortex-m3/STM32L151CBT6 help
-make -C examples/ARM/cortex-m3/STM32L151CBT6 clean all
-make -C examples/ARM/cortex-m3/STM32L151CBT6 flash
+make help
+make BOARD=STM32L151CBT6 EXAMPLE=thread clean all
 ```
 
 ## Examples
 
 The best starting point is [`examples/README.md`](examples/README.md).
 
-The current example layout includes:
+Each application in [`examples`](examples) owns its `Makefile`. The root
+`Makefile` is only a shortcut that forwards the selected board and example to
+that application. Board make fragments select the MCU and include
+`kernel/kernel.mk`.
 
-- [`examples/ARM/cortex-m3/STM32L151CBT6`](examples/ARM/cortex-m3/STM32L151CBT6) for the STM32L151 Cortex-M3 target
-- [`examples/ARM/cortex-m0/STM32F030F4P6`](examples/ARM/cortex-m0/STM32F030F4P6) for STM32F030 Cortex-M0 examples
-- [`examples/ARM/cortex-m0/LP-MSPM0C1104`](examples/ARM/cortex-m0/LP-MSPM0C1104) for the TI MSPM0C1104 Cortex-M0+ example
-- Static thread registration with `AKOS_THREAD_DEFINE(...)`
-- Board `Makefile` files that include `kernel/kernel.mk`
-- Board linker scripts that include `kernel.ld` between flash start and flash end
-- Example configuration guidance in `kernel/config.mk` and `kernel/inc/config.h`
-
-If you are bringing up a new board, start from the closest board folder under `examples/ARM`, then adapt the platform files, linker script, startup file, and kernel config settings to your target.
+Run `make help` to list the available board and example values.
 
 ## Contributing
 

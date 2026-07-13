@@ -4,7 +4,7 @@
 #
 # @author  HUYNNG | BUUPQ
 # @date    Created: 2026-06-11
-# @date    Updated: 2026-06-26
+# @date    Updated: 2026-07-13
 #
 # @module  AKOS
 ################################################################################
@@ -16,12 +16,14 @@
 KERNEL_DIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 ROOT_DIR ?= $(abspath $(KERNEL_DIR)/..)
 PORT_DIR ?= $(ROOT_DIR)/port
+THIRD_PARTY_DIR ?= $(ROOT_DIR)/third_party
 
 # ============================================================
 # 2. Config
 # ============================================================
 
 include $(KERNEL_DIR)/config.mk
+include $(THIRD_PARTY_DIR)/third_party.mk
 include $(PORT_DIR)/port.mk
 
 # ============================================================

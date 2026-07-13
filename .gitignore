@@ -15,6 +15,6 @@ cmake_install.cmake
 *~
 
 # Examples build outputs
-examples/**/_build/*/objects/
-!examples/**/_build/*/images/*.bin
-!examples/**/_build/*/images/*.hex
+!build/*/*/akos.bin
+!build/*/*/akos.elf
+!build/*/*/akos.hex
