@@ -70,6 +70,7 @@ SECTIONS
         . = ALIGN(4);
         _ebss = .;
         _end = .;
+        PROVIDE(end = _end);
     } > RAM
 
     .stack (NOLOAD) :

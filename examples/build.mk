@@ -23,7 +23,9 @@ SIZE := $(TOOLCHAIN)size
 # ============================================================
 
 BUILD_DIR := $(ROOT_DIR)/build/$(BOARD)/$(EXAMPLE)
-TARGET := $(BUILD_DIR)/akos
+BOARD_NAME := $(shell printf '%s' '$(BOARD)' | tr '[:upper:]' '[:lower:]')
+TARGET_NAME := akos_$(BOARD_NAME)_$(EXAMPLE)
+TARGET := $(BUILD_DIR)/$(TARGET_NAME)
 
 # ============================================================
 # 3. CPU Selection
@@ -98,7 +100,7 @@ clean:
 	$(AKOS_Q)rm -rf $(BUILD_DIR)
 
 help:
-	@echo "make [BOARD=STM32F030F4P6|STM32L151CBT6] [clean] [all]"
+	@echo "make [BOARD=STM32F030F4P6|STM32F103C8T6|STM32L151CBT6] [clean] [all]"
 
 # ============================================================
 # 8. Dependencies

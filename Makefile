@@ -40,10 +40,10 @@ endif
 .PHONY: all clean help
 
 all clean:
-	@$(MAKE) --no-print-directory -C $(EXAMPLE_DIR) BOARD=$(BOARD) $@
+	@$(MAKE) -C $(EXAMPLE_DIR) BOARD=$(BOARD) $@
 
 help:
 	@echo "make [BOARD=<board>] [EXAMPLE=<example>]"
 	@echo ""
-	@echo "Boards:   STM32F030F4P6, STM32L151CBT6"
+	@echo "Boards:   STM32F030F4P6, STM32F103C8T6, STM32L151CBT6"
 	@echo "Examples: thread, message, priority, timer"

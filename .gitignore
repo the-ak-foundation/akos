@@ -14,7 +14,7 @@ cmake_install.cmake
 *.swp
 *~
 
-# Examples build outputs
-!build/*/*/akos.bin
-!build/*/*/akos.elf
-!build/*/*/akos.hex
+# Example firmware images
+!build/*/*/akos_*.bin
+!build/*/*/akos_*.elf
+!build/*/*/akos_*.hex

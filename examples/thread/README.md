@@ -1,55 +1,48 @@
 # Thread example
 
-This example runs two periodic tasks. Task A has higher priority than Task B;
-in AKOS, a smaller priority value means a higher scheduling priority.
-The activation bar shows which task is currently running.
+This example follows the AKOS `00-blink` behavior: three independent thread
+descriptors run one shared `blink_task()` with different context objects. The
+contexts select periods of 100, 200, and 400 scheduler ticks.
+
+The current portable BSP exposes one board LED, so all three task instances
+toggle that LED. Each action is logged through the common `PRINT_DBG()` helper
+and BSP UART at 115200 baud.
 
 ```mermaid
 sequenceDiagram
-    participant Main
     participant Kernel as AKOS Kernel
-    participant A as Task A (priority 1)
-    participant B as Task B (priority 2)
-    participant Idle as Idle Task
+    participant T100 as Blink 100 ms
+    participant T200 as Blink 200 ms
+    participant T400 as Blink 400 ms
+    participant LED as BSP LED
+    participant UART as BSP UART
 
-    Main->>Kernel: akos_core_init()
-    Main->>Kernel: akos_core_run()
+    par Independent periodic threads
+        loop Every 100 ticks
+            Kernel->>T100: Schedule
+            T100->>LED: Toggle
+            T100->>UART: PRINT_DBG(toggle log)
+            T100->>Kernel: Delay 100 ticks
+        end
+    and
+        loop Every 200 ticks
+            Kernel->>T200: Schedule
+            T200->>LED: Toggle
+            T200->>UART: PRINT_DBG(toggle log)
+            T200->>Kernel: Delay 200 ticks
+        end
+    and
+        loop Every 400 ticks
+            Kernel->>T400: Schedule
+            T400->>LED: Toggle
+            T400->>UART: PRINT_DBG(toggle log)
+            T400->>Kernel: Delay 400 ticks
+        end
+    end
+```
 
-    Kernel->>A: Start highest-priority ready task
-    activate A
-    A->>A: LED ON
-    A->>Kernel: akos_thread_delay(500)
-    deactivate A
+Build from the repository root:
 
-    Kernel->>B: Schedule next ready task
-    activate B
-    B->>B: LED OFF
-    B->>Kernel: akos_thread_delay(1000)
-    deactivate B
-
-    Kernel->>Idle: No application task is ready
-    activate Idle
-
-    Note over Kernel,A: Tick 500: Task A becomes ready
-    deactivate Idle
-    Kernel->>A: Preempt Idle
-    activate A
-    A->>A: LED ON
-    A->>Kernel: akos_thread_delay(500)
-    deactivate A
-    Kernel->>Idle: Resume Idle
-    activate Idle
-
-    Note over Kernel,A: Tick 1000: Task A and Task B become ready
-    deactivate Idle
-    Kernel->>A: Run Task A first
-    activate A
-    A->>A: LED ON
-    A->>Kernel: akos_thread_delay(500)
-    deactivate A
-    Kernel->>B: Run Task B
-    activate B
-    B->>B: LED OFF
-    B->>Kernel: akos_thread_delay(1000)
-    deactivate B
+```bash
+make BOARD=STM32F103C8T6 EXAMPLE=thread
 ```

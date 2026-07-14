@@ -14,14 +14,14 @@ ContinuationIndentWidth: 4
 # Line length
 ColumnLimit: 80
 
-# Braces — K&R for control flow, Allman for functions
+# Braces — K&R for control flow and functions
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel:        false
   AfterClass:            false
   AfterControlStatement: Never
   AfterEnum:             false
-  AfterFunction:         true   # function body brace on new line
+  AfterFunction:         false  # function body brace on the same line
   AfterNamespace:        false
   AfterStruct:           false
   AfterUnion:            false
@@ -58,6 +58,7 @@ ReferenceAlignment: Left
 
 # Function call / declaration wrapping
 AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false

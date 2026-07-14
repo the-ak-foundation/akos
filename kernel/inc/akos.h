@@ -14,6 +14,15 @@
 #ifndef __AKOS_H__
 #define __AKOS_H__
 
+/* Version -------------------------------------------------------------------*/
+#define AKOS_VERSION_MAIN 1u
+#define AKOS_VERSION_SUB1 0u
+#define AKOS_VERSION_SUB2 0u
+
+#define AKOS_VERSION                                                          \
+    ((AKOS_VERSION_MAIN << 16u) | (AKOS_VERSION_SUB1 << 8u) |                 \
+     AKOS_VERSION_SUB2)
+
 /* Includes ------------------------------------------------------------------*/
 #include "core.h"
 #include "thread.h"

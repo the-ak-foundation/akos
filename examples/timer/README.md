@@ -1,44 +1,33 @@
 # Timer example
 
-The application creates a periodic 500-tick timer. Each expiration posts a
-signal to the application task, which toggles the LED and waits again.
-The activation bar shows which task is currently running.
+This example creates a periodic AKOS software timer with a 500-tick period.
+Every expiration posts `MSG_SIGNAL_TIMER` to the Timer Demo task. The task
+blocks on its message queue, selects `MSG_SIGNAL_TIMER`, toggles the BSP LED,
+prints a timestamped log through `PRINT_DBG()`, frees the message, and waits
+again.
 
 ```mermaid
 sequenceDiagram
-    participant Main
-    participant Kernel as AKOS Kernel
-    participant App as Timer Demo Task
     participant Timer as AKOS Timer Task
-    participant Queue as Application Queue
-    participant Board
+    participant Kernel as AKOS Kernel
+    participant Queue as Timer Demo Queue
+    participant App as Timer Demo Task
+    participant LED as BSP LED
+    participant UART as BSP UART
 
-    Main->>Kernel: akos_core_init()
-    Main->>Kernel: akos_core_run()
+    loop Every 500 ticks
+        Timer->>Queue: Post MSG_SIGNAL_TIMER
+        Queue->>Kernel: Timer Demo becomes ready
+        Kernel->>App: Schedule Timer Demo
+        Queue-->>App: Receive MSG_SIGNAL_TIMER
+        App->>LED: Toggle
+        App->>UART: PRINT_DBG(timestamped log)
+        App->>Kernel: Free message and wait
+    end
+```
 
-    Kernel->>App: Start application task
-    activate App
-    App->>Timer: akos_timer_create(period=500)
-    Timer-->>App: Timer handle
-    App->>Timer: akos_timer_start(delay=500)
-    App->>Queue: akos_thread_wait_for_msg(FOREVER)
-    App->>Kernel: Block on message
-    deactivate App
+Build from the repository root:
 
-    Note over Kernel,Timer: Tick 500: periodic timer expires
-    Kernel->>Timer: Run timer task
-    activate Timer
-    Timer->>Queue: Post signal 1
-    Queue->>Kernel: Application task becomes ready
-    deactivate Timer
-    Kernel->>App: Schedule application task
-    activate App
-    Queue-->>App: Return timer message
-    App->>Board: Toggle LED
-    App->>Queue: Free message
-    App->>Queue: Wait for next expiration
-    App->>Kernel: Block on message
-    deactivate App
-
-    Note over Timer,App: The same flow repeats every 500 ticks
+```bash
+make BOARD=STM32F103C8T6 EXAMPLE=timer
 ```

@@ -32,6 +32,12 @@ endif
 # ============================================================
 
 include $(BOARD_MK)
-VPATH += $(CURDIR)
-SOURCES += $(CURDIR)/main.c
+EXAMPLE_INC_DIR := $(CURDIR)/inc
+EXAMPLE_SRC_DIR := $(CURDIR)/src
+CPPFLAGS += -I$(EXAMPLE_INC_DIR)
+VPATH += $(EXAMPLE_SRC_DIR)
+SOURCES += \
+	$(EXAMPLE_SRC_DIR)/main.c \
+	$(EXAMPLE_SRC_DIR)/task_master.c \
+	$(EXAMPLE_SRC_DIR)/task_slave.c
 include ../build.mk

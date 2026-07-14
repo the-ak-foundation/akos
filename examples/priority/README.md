@@ -1,52 +1,46 @@
 # Priority example
 
-Task High has priority 1 and Task Low has priority 2. AKOS always schedules the
-ready task with the smaller priority value first.
-The activation bar shows which task is currently running.
+This example demonstrates AKOS priority scheduling with two independent tasks:
+
+- Task High has priority 1 and receives a periodic signal every 100 ticks.
+- Task Low has priority 2 and receives a periodic signal every 1000 ticks.
+
+A smaller priority number means a higher scheduling priority. When both tasks
+receive a timer signal together, AKOS runs Task High first. Both tasks block on
+their message queues between signals. All logs use the common `PRINT_DBG()`
+helper and BSP UART at 115200 baud.
 
 ```mermaid
 sequenceDiagram
-    participant Main
+    participant Timer as AKOS Timer Task
     participant Kernel as AKOS Kernel
+    participant HighQueue as High Queue
     participant High as Task High (priority 1)
+    participant LowQueue as Low Queue
     participant Low as Task Low (priority 2)
-    participant Idle as Idle Task
+    participant LED as BSP LED
+    participant UART as BSP UART
 
-    Main->>Kernel: akos_core_init()
-    Main->>Kernel: akos_core_run()
+    Note over Timer,Low: At tick 1000 both periodic timers expire
+    Timer->>HighQueue: Post MSG_SIGNAL_PRIO_HIGH
+    Timer->>LowQueue: Post MSG_SIGNAL_PRIO_LOW
+    HighQueue->>Kernel: Task High becomes ready
+    LowQueue->>Kernel: Task Low becomes ready
 
-    Kernel->>High: Start highest-priority ready task
-    activate High
-    High->>High: Toggle LED
-    High->>Kernel: akos_thread_delay(100)
-    deactivate High
+    Kernel->>High: Schedule priority 1 first
+    HighQueue-->>High: Receive high signal
+    High->>LED: Toggle
+    High->>UART: Print timestamped high log
+    High->>Kernel: Free message and wait
 
-    Kernel->>Low: Schedule next ready task
-    activate Low
-    Low->>Kernel: akos_thread_delay(1000)
-    deactivate Low
-    Kernel->>Idle: No application task is ready
-    activate Idle
+    Kernel->>Low: Schedule priority 2 next
+    LowQueue-->>Low: Receive low signal
+    Low->>UART: Print timestamped low log
+    Low->>Kernel: Free message and wait
+```
 
-    Note over Kernel,High: Tick 100: Task High becomes ready
-    deactivate Idle
-    Kernel->>High: Preempt Idle
-    activate High
-    High->>High: Toggle LED
-    High->>Kernel: akos_thread_delay(100)
-    deactivate High
-    Kernel->>Idle: Resume Idle
-    activate Idle
+Build from the repository root:
 
-    Note over Kernel,Low: Tick 1000: Task High and Task Low are ready
-    deactivate Idle
-    Kernel->>High: Run higher-priority task first
-    activate High
-    High->>High: Toggle LED
-    High->>Kernel: akos_thread_delay(100)
-    deactivate High
-    Kernel->>Low: Run lower-priority task
-    activate Low
-    Low->>Kernel: akos_thread_delay(1000)
-    deactivate Low
+```bash
+make BOARD=STM32F103C8T6 EXAMPLE=priority
 ```

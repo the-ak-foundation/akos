@@ -46,7 +46,7 @@ AKOS helps students understand how an RTOS works internally and serves as a prac
 |-------|-----|--------|
 | [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target |
 | STM32F030F4P6 board | STM32F030F4P6 (ARM Cortex-M0) | Example target |
-| TI LP-MSPM0C1104 LaunchPad | MSPM0C1104 (ARM Cortex-M0+) | Example target |
+| Blue Pill | STM32F103C8T6 (ARM Cortex-M3) | Example target |
 
 ## Quick start
 
