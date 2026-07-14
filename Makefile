@@ -15,6 +15,7 @@
 
 BOARD ?= STM32F030F4P6
 EXAMPLE ?= thread
+TOOLCHAIN ?= arm-none-eabi-
 
 EXAMPLE_DIR := examples/$(EXAMPLE)
 EXAMPLE_MAKEFILE := $(EXAMPLE_DIR)/Makefile
@@ -40,10 +41,14 @@ endif
 .PHONY: all clean help
 
 all clean:
-	@$(MAKE) -C $(EXAMPLE_DIR) BOARD=$(BOARD) $@
+	@$(MAKE) -C $(EXAMPLE_DIR) BOARD=$(BOARD) TOOLCHAIN=$(TOOLCHAIN) $@
 
 help:
-	@echo "make [BOARD=<board>] [EXAMPLE=<example>]"
+	@echo "make [BOARD=<board>] [EXAMPLE=<example>] [TOOLCHAIN=<prefix>]"
 	@echo ""
 	@echo "Boards:   STM32F030F4P6, STM32F103C8T6, STM32L151CBT6"
 	@echo "Examples: thread, message, priority, timer"
+	@echo "Toolchain prefix (default): $(TOOLCHAIN)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make BOARD=STM32F103C8T6 EXAMPLE=message"
