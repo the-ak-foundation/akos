@@ -6,6 +6,7 @@ void task_prio_high(void* p_arg) {
     ak_timer_t* timer =
         akos_timer_create(0u, MSG_SIGNAL_PRIO_HIGH, NULL, THREAD_PRIO_HIGH_ID,
                           HIGH_TASK_PERIOD_MS, TIMER_PERIODIC);
+
     if (timer != NULL) {
         akos_timer_start(timer, HIGH_TASK_PERIOD_MS);
     }

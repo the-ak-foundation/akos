@@ -48,9 +48,11 @@ AlignConsecutiveAssignments:
   AcrossComments: false
 AlignConsecutiveDeclarations:
   Enabled: false
-AlignTrailingComments:
-  Kind: Always
-  OverEmptyLines: 1
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignTrailingComments: true
 
 # Pointer alignment — left (uint8_t *ptr, not uint8_t* ptr)
 PointerAlignment: Left

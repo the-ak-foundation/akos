@@ -4,9 +4,7 @@
 
 #define NOTE "TASK SLAVE"
 
-void task_slave(void *p_arg) {
-    (void)p_arg;
-
+void task_slave(void* p_arg) {
     while (true) {
         msg_t* message = akos_thread_wait_for_msg(OS_CFG_DELAY_MAX);
 
@@ -21,8 +19,8 @@ void task_slave(void *p_arg) {
                     if ((payload != NULL) &&
                         (payload_size == (uint8_t)sizeof(MESSAGE_TEXT)) &&
                         (payload[payload_size - 1u] == '\0') &&
-                        (memcmp(payload, MESSAGE_TEXT,
-                                sizeof(MESSAGE_TEXT)) == 0)) {
+                        (memcmp(payload, MESSAGE_TEXT, sizeof(MESSAGE_TEXT)) ==
+                         0)) {
                         uint32_t ticks = akos_thread_get_tick();
 
                         PRINT_DBG(

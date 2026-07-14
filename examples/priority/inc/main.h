@@ -1,5 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -29,8 +29,8 @@ enum APP_MESSAGE_SIGNAL {
     MSG_SIGNAL_PRIO_LOW
 };
 
-void task_prio_high(void *p_arg);
-void task_prio_low(void *p_arg);
+void task_prio_high(void* p_arg);
+void task_prio_low(void* p_arg);
 void app_print_dbg(const char* format, ...);
 
-#endif /* MAIN_H */
+#endif /* __MAIN_H__ */

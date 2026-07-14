@@ -6,17 +6,17 @@
 #define NOTE "MAIN"
 
 static const blink_task_ctx_t blink_100ms_ctx = {
-    .name = "BLINK 100MS",
+    .name        = "BLINK 100MS",
     .delay_ticks = 100u,
 };
 
 static const blink_task_ctx_t blink_200ms_ctx = {
-    .name = "BLINK 200MS",
+    .name        = "BLINK 200MS",
     .delay_ticks = 200u,
 };
 
 static const blink_task_ctx_t blink_400ms_ctx = {
-    .name = "BLINK 400MS",
+    .name        = "BLINK 400MS",
     .delay_ticks = 400u,
 };
 

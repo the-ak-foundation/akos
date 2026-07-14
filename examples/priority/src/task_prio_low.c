@@ -3,10 +3,10 @@
 #define NOTE "TASK_PRIO_LOW"
 
 void task_prio_low(void* p_arg) {
-    ak_timer_t* timer;
+    ak_timer_t* timer =
+        akos_timer_create(1u, MSG_SIGNAL_PRIO_LOW, NULL, THREAD_PRIO_LOW_ID,
+                          LOW_TASK_PERIOD_MS, TIMER_PERIODIC);
 
-    timer = akos_timer_create(1u, MSG_SIGNAL_PRIO_LOW, NULL, THREAD_PRIO_LOW_ID,
-                              LOW_TASK_PERIOD_MS, TIMER_PERIODIC);
     if (timer != NULL) {
         akos_timer_start(timer, LOW_TASK_PERIOD_MS);
     }
