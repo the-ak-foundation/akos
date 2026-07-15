@@ -13,7 +13,7 @@
 # 1. Build Selection
 # ============================================================
 
-BOARD ?= STM32F030F4P6
+BOARD ?= AK_BASE_KIT_STM32L151
 EXAMPLE ?= thread
 TOOLCHAIN ?= arm-none-eabi-
 
@@ -46,9 +46,10 @@ all clean:
 help:
 	@echo "make [BOARD=<board>] [EXAMPLE=<example>] [TOOLCHAIN=<prefix>]"
 	@echo ""
-	@echo "Boards:   STM32F030F4P6, STM32F103C8T6, STM32L151CBT6"
+	@echo "Boards:   AK_BASE_KIT_STM32L151, STM32F030F4P6, STM32F103C8T6, STM32L151CBT6"
 	@echo "Examples: thread, message, priority, timer"
 	@echo "Toolchain prefix (default): $(TOOLCHAIN)"
 	@echo ""
 	@echo "Examples:"
+	@echo "  make BOARD=AK_BASE_KIT_STM32L151 EXAMPLE=thread"
 	@echo "  make BOARD=STM32F103C8T6 EXAMPLE=message"

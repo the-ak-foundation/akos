@@ -44,9 +44,21 @@ AKOS helps students understand how an RTOS works internally and serves as a prac
 
 | Board | MCU | Status |
 |-------|-----|--------|
-| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target |
+| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target (`AK_BASE_KIT_STM32L151`, application at `0x08003000`) |
 | STM32F030F4P6 board | STM32F030F4P6 (ARM Cortex-M0) | Example target |
 | Blue Pill | STM32F103C8T6 (ARM Cortex-M3) | Example target |
+
+### AK Base Kit flash layout
+
+| Address | Region | Image or purpose |
+|---|---|---|
+| `0x08000000` | **Boot** | [ak-base-kit-stm32l151-boot.bin](https://github.com/ak-embedded-software/ak-base-kit-stm32l151/blob/main/hardware/bin/ak-base-kit-stm32l151-boot.bin) |
+| `0x08002000` | **BSF** | Memory for data sharing between Boot and Application |
+| `0x08003000` | **Application** | [ak-base-kit-stm32l151-application.bin](https://github.com/ak-embedded-software/ak-base-kit-stm32l151/blob/main/hardware/bin/ak-base-kit-stm32l151-application.bin) |
+
+The default board builds only the Application region. Flash its generated
+`.bin` with `ak-flash` at address `0x08003000`; do not flash it at the beginning
+of internal Flash.
 
 ## Quick start
 
@@ -63,7 +75,14 @@ sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 git clone https://github.com/the-ak-foundation/akos
 cd akos
 make help
-make BOARD=STM32L151CBT6 EXAMPLE=thread clean all
+make clean all
+```
+
+The command above defaults to `BOARD=AK_BASE_KIT_STM32L151` and
+`EXAMPLE=thread`. An explicit equivalent is:
+
+```bash
+make BOARD=AK_BASE_KIT_STM32L151 EXAMPLE=thread clean all
 ```
 
 ## Examples

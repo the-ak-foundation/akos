@@ -17,6 +17,16 @@ ROOT_DIR := $(abspath ../..)
 EXAMPLE := priority
 BOARD ?= STM32F030F4P6
 
+ifeq ($(BOARD),STM32F030F4P6)
+OS_CFG_HEAP_SIZE ?= 1536u
+APP_TASK_STACK_SIZE := 64u
+EXAMPLE_REQUIRED_HEAP_SIZE := 1436u
+else
+OS_CFG_HEAP_SIZE ?= 2520u
+APP_TASK_STACK_SIZE := 192u
+EXAMPLE_REQUIRED_HEAP_SIZE := 2460u
+endif
+
 BOARD_MK := $(ROOT_DIR)/boards/$(BOARD)/board.mk
 
 # ============================================================
@@ -34,7 +44,9 @@ endif
 include $(BOARD_MK)
 EXAMPLE_INC_DIR := $(CURDIR)/inc
 EXAMPLE_SRC_DIR := $(CURDIR)/src
-CPPFLAGS += -I$(EXAMPLE_INC_DIR)
+CPPFLAGS += \
+	-I$(EXAMPLE_INC_DIR) \
+	-DAPP_TASK_STACK_SIZE=$(APP_TASK_STACK_SIZE)
 VPATH += $(EXAMPLE_SRC_DIR)
 SOURCES += \
 	$(EXAMPLE_SRC_DIR)/main.c \

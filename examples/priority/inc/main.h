@@ -8,7 +8,17 @@
 #include "akos.h"
 #include "bsp.h"
 
-#define PRINT_DBG(...) app_print_dbg(__VA_ARGS__)
+#ifndef BSP_UART_ENABLED
+#define BSP_UART_ENABLED (0u)
+#endif
+
+#if BSP_UART_ENABLED
+#define EXAMPLE_DEBUG_ENABLED (1u)
+#define PRINT_DBG(...)        app_print_dbg(__VA_ARGS__)
+#else
+#define EXAMPLE_DEBUG_ENABLED (0u)
+#define PRINT_DBG(...)        ((void)0)
+#endif
 
 #define HIGH_TASK_PERIOD_MS 100u
 #define LOW_TASK_PERIOD_MS  1000u
@@ -31,6 +41,8 @@ enum APP_MESSAGE_SIGNAL {
 
 void task_prio_high(void* p_arg);
 void task_prio_low(void* p_arg);
+#if EXAMPLE_DEBUG_ENABLED
 void app_print_dbg(const char* format, ...);
+#endif
 
 #endif /* __MAIN_H__ */

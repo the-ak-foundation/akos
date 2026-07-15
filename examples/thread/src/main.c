@@ -1,7 +1,9 @@
 #include "main.h"
 
+#if EXAMPLE_DEBUG_ENABLED
 #include <stdarg.h>
 #include <stdio.h>
+#endif
 
 #define NOTE "MAIN"
 
@@ -20,10 +22,14 @@ static const blink_task_ctx_t blink_400ms_ctx = {
     .delay_ticks = 400u,
 };
 
-AKOS_THREAD_DEFINE(blink_100ms, 0u, blink_task, &blink_100ms_ctx, 4u, 0u, 128u);
-AKOS_THREAD_DEFINE(blink_200ms, 1u, blink_task, &blink_200ms_ctx, 5u, 0u, 128u);
-AKOS_THREAD_DEFINE(blink_400ms, 2u, blink_task, &blink_400ms_ctx, 6u, 0u, 128u);
+AKOS_THREAD_DEFINE(blink_100ms, 0u, blink_task, &blink_100ms_ctx, 4u, 0u,
+                   THREAD_TASK_STACK_SIZE);
+AKOS_THREAD_DEFINE(blink_200ms, 1u, blink_task, &blink_200ms_ctx, 5u, 0u,
+                   THREAD_TASK_STACK_SIZE);
+AKOS_THREAD_DEFINE(blink_400ms, 2u, blink_task, &blink_400ms_ctx, 6u, 0u,
+                   THREAD_TASK_STACK_SIZE);
 
+#if EXAMPLE_DEBUG_ENABLED
 void app_print_dbg(const char* format, ...) {
     char log_buffer[LOG_BUFFER_SIZE];
     va_list arguments;
@@ -37,6 +43,7 @@ void app_print_dbg(const char* format, ...) {
         bsp_uart_puts(log_buffer);
     }
 }
+#endif
 
 int main(void) {
     bsp_init();

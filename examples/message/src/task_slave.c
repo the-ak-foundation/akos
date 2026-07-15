@@ -20,6 +20,7 @@ void task_slave(void* p_arg) {
                     if ((payload != NULL) && (payload_size == (uint8_t)sizeof(MESSAGE_TEXT)) &&
                         (payload[payload_size - 1u] == '\0') &&
                         (memcmp(payload, MESSAGE_TEXT, sizeof(MESSAGE_TEXT)) == 0)) {
+#if EXAMPLE_DEBUG_ENABLED
                         uint32_t ticks = akos_thread_get_tick();
 
                         PRINT_DBG("[%02lu-%02lu-%02lu %03lu ms] [%s]\trecv \"%s\" "
@@ -28,6 +29,7 @@ void task_slave(void* p_arg) {
                                   (unsigned long)TIME_MINUTES(ticks),
                                   (unsigned long)TIME_SECONDS(ticks),
                                   (unsigned long)TIME_MILLIS(ticks), NOTE, payload);
+#endif
                     }
                 }
             } break;

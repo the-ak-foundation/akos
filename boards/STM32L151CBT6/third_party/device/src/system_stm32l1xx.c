@@ -124,7 +124,7 @@
                is no need to call the 2 first functions listed above, since SystemCoreClock
                variable is updated automatically.
   */
-uint32_t SystemCoreClock        = 2097000U;
+uint32_t SystemCoreClock        = 32000000U;
 const uint8_t PLLMulTable[9]    = {3U, 4U, 6U, 8U, 12U, 16U, 24U, 32U, 48U};
 const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
 const uint8_t APBPrescTable[8]  = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
@@ -136,6 +136,8 @@ const uint8_t APBPrescTable[8]  = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
 /** @addtogroup STM32L1xx_System_Private_FunctionPrototypes
   * @{
   */
+
+static void SetSysClock(void);
 
 #if defined (STM32L151xD) || defined (STM32L152xD) || defined (STM32L162xD)
 #ifdef DATA_IN_ExtSRAM
@@ -163,7 +165,9 @@ void SystemInit (void)
 #ifdef DATA_IN_ExtSRAM
   SystemInit_ExtMemCtl(); 
 #endif /* DATA_IN_ExtSRAM */
-    
+
+  SetSysClock();
+
   /* Configure the Vector Table location -------------------------------------*/
 #if defined(USER_VECT_TAB_ADDRESS)
   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM. */
@@ -257,6 +261,75 @@ void SystemCoreClockUpdate (void)
   tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
   /* HCLK clock frequency */
   SystemCoreClock >>= tmp;
+}
+
+/**
+  * @brief  Configure HSI through PLL as the 32 MHz system clock.
+  * @param  None
+  * @retval None
+  */
+static void SetSysClock(void)
+{
+  uint32_t delay;
+
+  /* Use the highest MSI range as the intermediate clock step. */
+  RCC->CR |= RCC_CR_MSION;
+  while ((RCC->CR & RCC_CR_MSIRDY) == 0U)
+  {
+  }
+
+  RCC->ICSCR = (RCC->ICSCR & ~RCC_ICSCR_MSIRANGE) |
+               RCC_ICSCR_MSIRANGE_6;
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_MSI;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_MSI)
+  {
+  }
+
+  /* Keep more than 5 us between frequency increases at 4.194 MHz. */
+  for (delay = 0U; delay < 32U; delay++)
+  {
+    __NOP();
+  }
+
+  RCC->CR &= ~RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) != 0U)
+  {
+  }
+
+  RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+  PWR->CR = (PWR->CR & ~PWR_CR_VOS) | PWR_CR_VOS_0;
+  while ((PWR->CSR & PWR_CSR_VOSF) != 0U)
+  {
+  }
+
+  /* Range 1 at 32 MHz requires 64-bit access, prefetch and one wait state. */
+  FLASH->ACR = FLASH_ACR_ACC64 | FLASH_ACR_PRFTEN | FLASH_ACR_LATENCY;
+
+  RCC->CR |= RCC_CR_HSION;
+  while ((RCC->CR & RCC_CR_HSIRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI)
+  {
+  }
+
+  RCC->CFGR &= ~(RCC_CFGR_HPRE | RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2 |
+                 RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV);
+  RCC->CFGR |= RCC_CFGR_HPRE_DIV1 | RCC_CFGR_PPRE1_DIV1 |
+               RCC_CFGR_PPRE2_DIV1 | RCC_CFGR_PLLSRC_HSI |
+               RCC_CFGR_PLLMUL6 | RCC_CFGR_PLLDIV3;
+
+  RCC->CR |= RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
+  {
+  }
 }
 
 #if defined (STM32L151xD) || defined (STM32L152xD) || defined (STM32L162xD)
@@ -424,5 +497,3 @@ void SystemInit_ExtMemCtl(void)
 /**
   * @}
   */
-
-

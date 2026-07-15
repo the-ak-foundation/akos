@@ -6,8 +6,7 @@
  * Internal functions
  * ========================================================================= */
 
-static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock,
-                                       uint32_t baudrate) {
+static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock, uint32_t baudrate) {
     return (peripheral_clock + (baudrate / 2u)) / baudrate;
 }
 
@@ -16,35 +15,10 @@ static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock,
  * ========================================================================= */
 
 void bsp_init(void) {
-    bsp_clock_init();
     bsp_led_init();
+#if BSP_UART_ENABLED
     bsp_uart_init();
-}
-
-/* ============================================================================
- * Clock
- * ========================================================================= */
-
-void bsp_clock_init(void) {
-    RCC->CR |= RCC_CR_HSION;
-    while ((RCC->CR & RCC_CR_HSIRDY) == 0u) {
-    }
-
-    FLASH->ACR = FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY;
-
-    RCC->CFGR &= ~(RCC_CFGR_SW | RCC_CFGR_HPRE | RCC_CFGR_PPRE |
-                   RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL);
-    RCC->CFGR |= RCC_CFGR_PLLSRC_HSI_DIV2 | RCC_CFGR_PLLMUL12;
-
-    RCC->CR |= RCC_CR_PLLON;
-    while ((RCC->CR & RCC_CR_PLLRDY) == 0u) {
-    }
-
-    RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
-    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
-    }
-
-    SystemCoreClockUpdate();
+#endif
 }
 
 /* ============================================================================
@@ -52,11 +26,16 @@ void bsp_clock_init(void) {
  * ========================================================================= */
 
 void bsp_led_init(void) {
-    const uint32_t shift = BSP_LED_GPIO_PIN * 2u;
+    const uint32_t shift      = BSP_LED_GPIO_PIN * 2u;
+    const uint32_t field_mask = 3u << shift;
+    const uint32_t pin_mask   = 1u << BSP_LED_GPIO_PIN;
 
     RCC->AHBENR |= BSP_LED_GPIO_CLOCK;
-    BSP_LED_GPIO_PORT->MODER &= ~(3u << shift);
+    BSP_LED_GPIO_PORT->MODER &= ~field_mask;
     BSP_LED_GPIO_PORT->MODER |= 1u << shift;
+    BSP_LED_GPIO_PORT->OTYPER &= ~pin_mask;
+    BSP_LED_GPIO_PORT->OSPEEDR &= ~field_mask;
+    BSP_LED_GPIO_PORT->PUPDR &= ~field_mask;
     bsp_led_off();
 }
 
@@ -81,7 +60,8 @@ void bsp_led_toggle(void) {
 
     if ((BSP_LED_GPIO_PORT->ODR & pin_mask) != 0u) {
         BSP_LED_GPIO_PORT->BSRR = 1u << (BSP_LED_GPIO_PIN + 16u);
-    } else {
+    }
+    else {
         BSP_LED_GPIO_PORT->BSRR = 1u << BSP_LED_GPIO_PIN;
     }
 }
@@ -89,7 +69,8 @@ void bsp_led_toggle(void) {
 void bsp_led_write(bool state) {
     if (state) {
         bsp_led_on();
-    } else {
+    }
+    else {
         bsp_led_off();
     }
 }
@@ -110,16 +91,23 @@ bool bsp_led_is_on(void) {
  * ========================================================================= */
 
 void bsp_uart_init(void) {
-    const uint32_t tx_shift = BSP_UART_TX_PIN * 2u;
-    const uint32_t rx_shift = BSP_UART_RX_PIN * 2u;
+    const uint32_t tx_shift    = BSP_UART_TX_PIN * 2u;
+    const uint32_t rx_shift    = BSP_UART_RX_PIN * 2u;
     const uint32_t tx_af_shift = (BSP_UART_TX_PIN - 8u) * 4u;
     const uint32_t rx_af_shift = (BSP_UART_RX_PIN - 8u) * 4u;
+    const uint32_t tx_pin_mask = 1u << BSP_UART_TX_PIN;
+    const uint32_t rx_pin_mask = 1u << BSP_UART_RX_PIN;
+    const uint32_t mode_mask   = (3u << tx_shift) | (3u << rx_shift);
 
     RCC->AHBENR |= BSP_UART_GPIO_CLOCK;
     RCC->APB2ENR |= BSP_UART_CLOCK;
 
-    BSP_UART_GPIO_PORT->MODER &= ~((3u << tx_shift) | (3u << rx_shift));
+    BSP_UART_GPIO_PORT->MODER &= ~mode_mask;
     BSP_UART_GPIO_PORT->MODER |= (2u << tx_shift) | (2u << rx_shift);
+    BSP_UART_GPIO_PORT->OTYPER &= ~(tx_pin_mask | rx_pin_mask);
+    BSP_UART_GPIO_PORT->OSPEEDR &= ~mode_mask;
+    BSP_UART_GPIO_PORT->PUPDR &= ~mode_mask;
+    BSP_UART_GPIO_PORT->PUPDR |= 1u << rx_shift;
 
     BSP_UART_GPIO_PORT->AFR[1] &=
         ~((0xFu << tx_af_shift) | (0xFu << rx_af_shift));
@@ -129,8 +117,7 @@ void bsp_uart_init(void) {
     BSP_UART->CR1 = 0u;
     BSP_UART->CR2 = 0u;
     BSP_UART->CR3 = 0u;
-    BSP_UART->BRR =
-        bsp_uart_calculate_brr(BSP_SYS_CLOCK_HZ, BSP_UART_BAUDRATE);
+    BSP_UART->BRR = bsp_uart_calculate_brr(SystemCoreClock, BSP_UART_BAUDRATE);
     BSP_UART->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 }
 

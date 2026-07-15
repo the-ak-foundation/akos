@@ -24,7 +24,7 @@ SIZE := $(TOOLCHAIN)size
 
 BUILD_DIR := $(ROOT_DIR)/build/$(BOARD)/$(EXAMPLE)
 BOARD_NAME := $(shell printf '%s' '$(BOARD)' | tr '[:upper:]' '[:lower:]')
-TARGET_NAME := akos_$(BOARD_NAME)_$(EXAMPLE)
+TARGET_NAME ?= akos_$(BOARD_NAME)_$(EXAMPLE)
 TARGET := $(BUILD_DIR)/$(TARGET_NAME)
 
 # ============================================================
@@ -67,10 +67,23 @@ DEPS := $(OBJECTS:.o=.d)
 # 7. Build Targets
 # ============================================================
 
-.PHONY: all clean help
+.PHONY: all check-config clean help
 
-all: $(TARGET).elf $(TARGET).hex $(TARGET).bin
+all: check-config $(TARGET).elf $(TARGET).hex $(TARGET).bin
 	$(call AKOS_SIZE,$(TARGET).elf)
+	$(BOARD_POST_BUILD)
+
+check-config:
+ifneq ($(strip $(EXAMPLE_REQUIRED_HEAP_SIZE)),)
+	@configured_heap='$(subst U,,$(subst u,,$(OS_CFG_HEAP_SIZE)))'; \
+	required_heap='$(subst U,,$(subst u,,$(EXAMPLE_REQUIRED_HEAP_SIZE)))'; \
+	if ! test "$$configured_heap" -ge "$$required_heap" 2>/dev/null; then \
+		printf '\033[1;31mBUILD ERROR:\033[0m OS_CFG_HEAP_SIZE=%s is too small for example %s.\n' \
+			'$(OS_CFG_HEAP_SIZE)' '$(EXAMPLE)'; \
+		printf 'Set OS_CFG_HEAP_SIZE to at least %s.\n' '$(EXAMPLE_REQUIRED_HEAP_SIZE)'; \
+		exit 1; \
+	fi
+endif
 
 $(TARGET).elf: $(OBJECTS) $(LINKER_SCRIPT)
 	@mkdir -p $(dir $@)
@@ -100,7 +113,7 @@ clean:
 	$(AKOS_Q)rm -rf $(BUILD_DIR)
 
 help:
-	@echo "make [BOARD=STM32F030F4P6|STM32F103C8T6|STM32L151CBT6] [clean] [all]"
+	@echo "make [BOARD=AK_BASE_KIT_STM32L151|STM32F030F4P6|STM32F103C8T6|STM32L151CBT6] [clean] [all]"
 
 # ============================================================
 # 8. Dependencies

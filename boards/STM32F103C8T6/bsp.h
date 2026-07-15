@@ -1,5 +1,5 @@
-#ifndef __BSP_H__
-#define __BSP_H__
+#ifndef __STM32F103C8T6_BSP_H__
+#define __STM32F103C8T6_BSP_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -15,28 +15,35 @@ extern "C" {
  * BSP configuration define
  * ========================================================================= */
 
-#define BSP_HSE_CLOCK_HZ (8000000)
-#define BSP_SYS_CLOCK_HZ (72000000)
+#define BSP_HSE_CLOCK_HZ (8000000u)
+#define BSP_SYS_CLOCK_HZ (72000000u)
+#define BSP_UART_ENABLED  (1u)
 
 /* ============================================================================
  * LED define
  * ========================================================================= */
 
-/* LED: PC13, active low. */
-#define BSP_LED_GPIO_PORT  GPIOC
-#define BSP_LED_GPIO_PIN   (13)
-#define BSP_LED_GPIO_CLOCK RCC_APB2ENR_IOPCEN
-#define BSP_LED_ACTIVE_LOW (1)
+/* Blue Pill LED: PC13, active low. */
+#define BSP_LED_PC13_GPIO_PORT  GPIOC
+#define BSP_LED_PC13_GPIO_PIN   (13u)
+#define BSP_LED_PC13_GPIO_CLOCK RCC_APB2ENR_IOPCEN
+#define BSP_LED_PC13_ACTIVE_LOW (1u)
+
+/* Blue Pill Plus LED: PB2, active high. */
+#define BSP_LED_PB2_GPIO_PORT  GPIOB
+#define BSP_LED_PB2_GPIO_PIN   (2u)
+#define BSP_LED_PB2_GPIO_CLOCK RCC_APB2ENR_IOPBEN
+#define BSP_LED_PB2_ACTIVE_LOW (0u)
 
 /* ============================================================================
  * UART define
  * ========================================================================= */
 
-#define BSP_UART_BAUDRATE   (115200)
+#define BSP_UART_BAUDRATE   (115200u)
 #define BSP_UART            USART1
 #define BSP_UART_GPIO_PORT  GPIOA
-#define BSP_UART_TX_PIN     (9)
-#define BSP_UART_RX_PIN     (10)
+#define BSP_UART_TX_PIN     (9u)
+#define BSP_UART_RX_PIN     (10u)
 #define BSP_UART_GPIO_CLOCK RCC_APB2ENR_IOPAEN
 #define BSP_UART_AFIO_CLOCK RCC_APB2ENR_AFIOEN
 #define BSP_UART_CLOCK      RCC_APB2ENR_USART1EN
@@ -46,12 +53,6 @@ extern "C" {
  * ========================================================================= */
 
 void bsp_init(void);
-
-/* ============================================================================
- * Clock
- * ========================================================================= */
-
-void bsp_clock_init(void);
 
 /* ============================================================================
  * LED
@@ -82,4 +83,4 @@ void bsp_uart_flush(void);
 }
 #endif
 
-#endif /* __BSP_H__ */
+#endif /* __STM32F103C8T6_BSP_H__ */

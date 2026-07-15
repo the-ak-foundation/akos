@@ -4,8 +4,44 @@
  * Internal functions
  * ========================================================================= */
 
-static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock,
-                                       uint32_t baudrate) {
+static void bsp_led_pin_init(GPIO_TypeDef* gpio_port, uint32_t gpio_pin) {
+    const uint32_t pin_position          = (gpio_pin % 8u) * 4u;
+    const uint32_t pin_mask              = 0x0Fu << pin_position;
+    const uint32_t output_push_pull_2mhz = 0x02u << pin_position;
+    volatile uint32_t* configuration_register;
+
+    if (gpio_pin < 8u) {
+        configuration_register = &gpio_port->CRL;
+    } else {
+        configuration_register = &gpio_port->CRH;
+    }
+
+    *configuration_register =
+        (*configuration_register & ~pin_mask) | output_push_pull_2mhz;
+}
+
+static void bsp_led_pin_write(GPIO_TypeDef* gpio_port,
+                              uint32_t gpio_pin,
+                              bool active_low,
+                              bool state) {
+    const bool pin_is_high = state != active_low;
+
+    if (pin_is_high) {
+        gpio_port->BSRR = 1u << gpio_pin;
+    } else {
+        gpio_port->BSRR = 1u << (gpio_pin + 16u);
+    }
+}
+
+static bool bsp_led_pin_is_on(GPIO_TypeDef* gpio_port,
+                              uint32_t gpio_pin,
+                              bool active_low) {
+    const bool pin_is_high = (gpio_port->ODR & (1u << gpio_pin)) != 0u;
+
+    return pin_is_high != active_low;
+}
+
+static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock, uint32_t baudrate) {
     /*
      * STM32F1 USART uses oversampling by 16.
      *
@@ -28,115 +64,10 @@ static uint32_t bsp_uart_calculate_brr(uint32_t peripheral_clock,
  * ========================================================================= */
 
 void bsp_init(void) {
-    bsp_clock_init();
     bsp_led_init();
+#if BSP_UART_ENABLED
     bsp_uart_init();
-}
-
-/* ============================================================================
- * Clock
- * ========================================================================= */
-
-void bsp_clock_init(void) {
-    /*
-     * Clock tree:
-     *
-     * HSE      = 8 MHz
-     * PLL      = HSE x 9 = 72 MHz
-     *
-     * SYSCLK   = 72 MHz
-     * HCLK     = 72 MHz
-     * PCLK1    = 36 MHz
-     * PCLK2    = 72 MHz
-     */
-
-    /*
-     * Enable HSI first so the MCU always has a valid clock source while
-     * changing the clock configuration.
-     */
-    RCC->CR |= RCC_CR_HSION;
-
-    while ((RCC->CR & RCC_CR_HSIRDY) == 0u) {
-    }
-
-    /*
-     * Switch temporarily to HSI before changing PLL configuration.
-     */
-    RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
-
-    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI) {
-    }
-
-    /*
-     * Disable PLL before modifying PLL configuration.
-     */
-    RCC->CR &= ~RCC_CR_PLLON;
-
-    while ((RCC->CR & RCC_CR_PLLRDY) != 0u) {
-    }
-
-    /*
-     * Enable external 8 MHz crystal oscillator.
-     */
-    RCC->CR |= RCC_CR_HSEON;
-
-    while ((RCC->CR & RCC_CR_HSERDY) == 0u) {
-    }
-
-    /*
-     * Configure Flash:
-     *
-     * 72 MHz requires two wait states.
-     * Enable Flash prefetch buffer.
-     */
-    FLASH->ACR &= ~(FLASH_ACR_LATENCY | FLASH_ACR_PRFTBE);
-    FLASH->ACR |= FLASH_ACR_LATENCY_2 | FLASH_ACR_PRFTBE;
-
-    /*
-     * Clear clock configuration fields.
-     */
-    RCC->CFGR &= ~(RCC_CFGR_SW | RCC_CFGR_HPRE | RCC_CFGR_PPRE1 |
-                   RCC_CFGR_PPRE2 | RCC_CFGR_ADCPRE | RCC_CFGR_PLLSRC |
-                   RCC_CFGR_PLLXTPRE | RCC_CFGR_PLLMULL);
-
-    /*
-     * Configure clock prescalers:
-     *
-     * AHB  = SYSCLK / 1 = 72 MHz
-     * APB1 = HCLK / 2   = 36 MHz
-     * APB2 = HCLK / 1   = 72 MHz
-     *
-     * PLL source = HSE
-     * PLL input  = HSE without division
-     * PLL MUL    = x9
-     */
-    RCC->CFGR |= RCC_CFGR_HPRE_DIV1 | RCC_CFGR_PPRE1_DIV2 |
-                 RCC_CFGR_PPRE2_DIV1 | RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9;
-
-    /*
-     * Enable PLL.
-     */
-    RCC->CR |= RCC_CR_PLLON;
-
-    while ((RCC->CR & RCC_CR_PLLRDY) == 0u) {
-    }
-
-    /*
-     * Select PLL as system clock.
-     */
-    RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
-
-    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
-    }
-
-    /*
-     * Update CMSIS SystemCoreClock variable.
-     *
-     * The project should define:
-     *
-     * HSE_VALUE = 8000000
-     */
-    SystemCoreClockUpdate();
+#endif
 }
 
 /* ============================================================================
@@ -145,28 +76,18 @@ void bsp_clock_init(void) {
 
 void bsp_led_init(void) {
     /*
-     * Enable GPIOC peripheral clock.
+     * Enable the LED GPIO peripheral clock.
      */
-    RCC->APB2ENR |= BSP_LED_GPIO_CLOCK;
+    RCC->APB2ENR |= BSP_LED_PC13_GPIO_CLOCK | BSP_LED_PB2_GPIO_CLOCK;
 
     /*
-     * PC13 is located in GPIOC_CRH.
-     *
      * GPIO configuration:
      *
-     * MODE13 = 10: output mode, maximum speed 2 MHz
-     * CNF13  = 00: general-purpose push-pull output
-     *
-     * CRH bits for PC13:
-     *
-     * Bits 23:20
+     * MODE = 10: output mode, maximum speed 2 MHz
+     * CNF  = 00: general-purpose push-pull output
      */
-    const uint32_t pin_position          = (BSP_LED_GPIO_PIN - 8u) * 4u;
-    const uint32_t pin_mask              = 0x0Fu << pin_position;
-    const uint32_t output_push_pull_2mhz = 0x02u << pin_position;
-
-    BSP_LED_GPIO_PORT->CRH =
-        (BSP_LED_GPIO_PORT->CRH & ~pin_mask) | output_push_pull_2mhz;
+    bsp_led_pin_init(BSP_LED_PC13_GPIO_PORT, BSP_LED_PC13_GPIO_PIN);
+    bsp_led_pin_init(BSP_LED_PB2_GPIO_PORT, BSP_LED_PB2_GPIO_PIN);
 
     /*
      * Default LED state: OFF.
@@ -175,29 +96,29 @@ void bsp_led_init(void) {
 }
 
 void bsp_led_on(void) {
-#if BSP_LED_ACTIVE_LOW
-    BSP_LED_GPIO_PORT->BSRR = 1u << (BSP_LED_GPIO_PIN + 16u);
-#else
-    BSP_LED_GPIO_PORT->BSRR = 1u << BSP_LED_GPIO_PIN;
-#endif
+    bsp_led_pin_write(BSP_LED_PC13_GPIO_PORT,
+                      BSP_LED_PC13_GPIO_PIN,
+                      BSP_LED_PC13_ACTIVE_LOW,
+                      true);
+    bsp_led_pin_write(BSP_LED_PB2_GPIO_PORT,
+                      BSP_LED_PB2_GPIO_PIN,
+                      BSP_LED_PB2_ACTIVE_LOW,
+                      true);
 }
 
 void bsp_led_off(void) {
-#if BSP_LED_ACTIVE_LOW
-    BSP_LED_GPIO_PORT->BSRR = 1u << BSP_LED_GPIO_PIN;
-#else
-    BSP_LED_GPIO_PORT->BSRR = 1u << (BSP_LED_GPIO_PIN + 16u);
-#endif
+    bsp_led_pin_write(BSP_LED_PC13_GPIO_PORT,
+                      BSP_LED_PC13_GPIO_PIN,
+                      BSP_LED_PC13_ACTIVE_LOW,
+                      false);
+    bsp_led_pin_write(BSP_LED_PB2_GPIO_PORT,
+                      BSP_LED_PB2_GPIO_PIN,
+                      BSP_LED_PB2_ACTIVE_LOW,
+                      false);
 }
 
 void bsp_led_toggle(void) {
-    const uint32_t pin_mask = 1u << BSP_LED_GPIO_PIN;
-
-    if ((BSP_LED_GPIO_PORT->ODR & pin_mask) != 0u) {
-        BSP_LED_GPIO_PORT->BSRR = 1u << (BSP_LED_GPIO_PIN + 16u);
-    } else {
-        BSP_LED_GPIO_PORT->BSRR = 1u << BSP_LED_GPIO_PIN;
-    }
+    bsp_led_write(!bsp_led_is_on());
 }
 
 void bsp_led_write(bool state) {
@@ -209,14 +130,9 @@ void bsp_led_write(bool state) {
 }
 
 bool bsp_led_is_on(void) {
-    const bool pin_is_high =
-        (BSP_LED_GPIO_PORT->ODR & (1u << BSP_LED_GPIO_PIN)) != 0u;
-
-#if BSP_LED_ACTIVE_LOW
-    return !pin_is_high;
-#else
-    return pin_is_high;
-#endif
+    return bsp_led_pin_is_on(BSP_LED_PB2_GPIO_PORT,
+                             BSP_LED_PB2_GPIO_PIN,
+                             BSP_LED_PB2_ACTIVE_LOW);
 }
 
 /* ============================================================================
@@ -287,14 +203,11 @@ void bsp_uart_init(void) {
     /*
      * USART1 is connected to APB2.
      *
-     * PCLK2 = 72 MHz
-     *
-     * BRR for 115200 baud:
-     *
-     * 72,000,000 / 115,200 = 625
-     * BRR = 0x0271
+     * USART1 uses PCLK2, which is configured to match the 72 MHz system clock.
+     * Calculate BRR from SystemCoreClock so UART remains correct if the clock
+     * configuration changes later.
      */
-    BSP_UART->BRR = bsp_uart_calculate_brr(BSP_SYS_CLOCK_HZ, BSP_UART_BAUDRATE);
+    BSP_UART->BRR = bsp_uart_calculate_brr(SystemCoreClock, BSP_UART_BAUDRATE);
 
     /*
      * CR1 configuration:

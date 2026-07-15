@@ -23,6 +23,9 @@ ROOT_DIR ?= $(abspath $(BOARD_DIR)/../..)
 MCU := STM32F030F4P6
 ARCH := cortex-m0
 OS_CFG_SYSTICK_CLOCK_HZ ?= 48000000u
+OS_CFG_HEAP_SIZE ?= 1536u
+OS_CFG_MSG_POOL_SIZE ?= 8u
+OS_CFG_TIMER_POOL_SIZE ?= 2u
 OS_CFG_USE_LOG ?= 0u
 
 THIRD_PARTY_DIR := $(BOARD_DIR)/third_party
@@ -44,6 +47,7 @@ CPPFLAGS += \
 	-I$(CMSIS_DIR)/inc \
 	-I$(DEVICE_DIR)/inc \
 	-DSTM32F030x6 \
+	-DHSI_VALUE=8000000u \
 	-DAKOS_PORT_DEVICE_HEADER=\"stm32f0xx.h\"
 VPATH += $(BOARD_DIR) $(DEVICE_DIR)/src
 SOURCES += \
@@ -51,3 +55,16 @@ SOURCES += \
 	$(DEVICE_DIR)/src/system_stm32f0xx.c \
 	$(DEVICE_DIR)/src/startup_stm32f030x6.s
 LINKER_SCRIPT := $(BOARD_DIR)/linker.ld
+
+# ============================================================
+# 5. Post-build Notes
+# ============================================================
+
+define BOARD_POST_BUILD
+@printf '\n\033[1;33mBOARD NOTE:\033[0m STM32F030F4P6 has only 4 KB SRAM.\n'
+@printf 'UART/debug logging: disabled to preserve RAM.\n'
+@printf 'System clock: HSI through PLL at 48 MHz.\n'
+@printf 'Runtime output: LED on PA4.\n'
+@printf 'AKOS resources: heap %s, message pool %s, timer pool %s.\n\n' \
+	'$(OS_CFG_HEAP_SIZE)' '$(OS_CFG_MSG_POOL_SIZE)' '$(OS_CFG_TIMER_POOL_SIZE)'
+endef

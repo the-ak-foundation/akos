@@ -97,7 +97,7 @@
                is no need to call the 2 first functions listed above, since SystemCoreClock
                variable is updated automatically.
   */
-uint32_t SystemCoreClock = 8000000;
+uint32_t SystemCoreClock = 48000000U;
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
@@ -109,6 +109,8 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 /** @addtogroup STM32F0xx_System_Private_FunctionPrototypes
   * @{
   */
+
+static void SetSysClock(void);
 
 /**
   * @}
@@ -131,6 +133,7 @@ void SystemInit(void)
                          User can setups the default system clock (System clock source, PLL Multiplier
                          and Divider factors, AHB/APBx prescalers and Flash settings).
    */
+  SetSysClock();
 }
 
 /**
@@ -236,8 +239,44 @@ void SystemCoreClockUpdate (void)
 }
 
 /**
-  * @}
+  * @brief  Configure HSI through PLL as the 48 MHz system clock.
+  * @param  None
+  * @retval None
   */
+static void SetSysClock(void)
+{
+  RCC->CR |= RCC_CR_HSION;
+  while ((RCC->CR & RCC_CR_HSIRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI)
+  {
+  }
+
+  RCC->CR &= ~RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) != 0U)
+  {
+  }
+
+  /* Above 24 MHz, STM32F030 requires one Flash wait state and prefetch. */
+  FLASH->ACR = FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY;
+
+  RCC->CFGR &= ~(RCC_CFGR_SW | RCC_CFGR_HPRE | RCC_CFGR_PPRE |
+                 RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL);
+  RCC->CFGR |= RCC_CFGR_PLLSRC_HSI_DIV2 | RCC_CFGR_PLLMUL12;
+
+  RCC->CR |= RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
+  {
+  }
+}
 
 /**
   * @}
@@ -247,3 +286,6 @@ void SystemCoreClockUpdate (void)
   * @}
   */
 
+/**
+  * @}
+  */

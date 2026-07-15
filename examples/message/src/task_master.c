@@ -18,6 +18,7 @@ void task_master(void* p_arg) {
         if (message != NULL) {
             switch (message->sig) {
             case MSG_SIGNAL_TIMER: {
+#if EXAMPLE_DEBUG_ENABLED
                 uint32_t ticks = akos_thread_get_tick();
 
                 PRINT_DBG("[%02lu-%02lu-%02lu %03lu ms] [%s]\tsend \"%s\" to "
@@ -25,6 +26,7 @@ void task_master(void* p_arg) {
                           (unsigned long)TIME_HOURS(ticks), (unsigned long)TIME_MINUTES(ticks),
                           (unsigned long)TIME_SECONDS(ticks), (unsigned long)TIME_MILLIS(ticks),
                           NOTE, MESSAGE_TEXT);
+#endif
 
                 akos_thread_post_msg_dynamic(THREAD_SLAVE_ID, MSG_SIGNAL_TEXT, MESSAGE_TEXT,
                                              (uint8_t)sizeof(MESSAGE_TEXT));

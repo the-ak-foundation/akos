@@ -18,14 +18,18 @@ void task_prio_high(void* p_arg) {
         if (message != NULL) {
             switch (message->sig) {
             case MSG_SIGNAL_PRIO_HIGH: {
+#if EXAMPLE_DEBUG_ENABLED
                 uint32_t ticks = akos_thread_get_tick();
+#endif
 
                 bsp_led_toggle();
+#if EXAMPLE_DEBUG_ENABLED
                 PRINT_DBG("[%02lu-%02lu-%02lu %03lu ms] [%s]\trecv signal, "
                           "toggle LED\r\n",
                           (unsigned long)TIME_HOURS(ticks), (unsigned long)TIME_MINUTES(ticks),
                           (unsigned long)TIME_SECONDS(ticks), (unsigned long)TIME_MILLIS(ticks),
                           NOTE);
+#endif
             } break;
 
             default: {

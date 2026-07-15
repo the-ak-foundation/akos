@@ -1,8 +1,9 @@
 # STM32F103C8T6 board
 
-Board support package for the STM32F103C8T6 Blue Pill (Arm Cortex-M3).
-It uses an 8 MHz HSE to run at 72 MHz, the active-low LED on PC13, and USART1
-on PA9/PA10 at 115200 baud.
+Board support package for STM32F103C8T6 Blue Pill variants (Arm Cortex-M3).
+It uses an 8 MHz HSE to run at 72 MHz and USART1 on PA9/PA10 at 115200 baud.
+The LED API drives both the active-low LED on PC13 and the active-high LED on
+PB2, allowing the same firmware image to support both common LED layouts.
 
 Board initialization and peripheral APIs are exposed through `bsp.h` and
 `bsp.c`.

@@ -1,5 +1,5 @@
-#ifndef __BSP_H__
-#define __BSP_H__
+#ifndef __STM32F030F4P6_BSP_H__
+#define __STM32F030F4P6_BSP_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -15,7 +15,8 @@ extern "C" {
  * BSP configuration define
  * ========================================================================= */
 
-#define BSP_SYS_CLOCK_HZ (48000000)
+#define BSP_SYS_CLOCK_HZ (48000000u)
+#define BSP_UART_ENABLED  (0u)
 
 /* ============================================================================
  * LED define
@@ -23,34 +24,28 @@ extern "C" {
 
 /* LED: PA4, active high. */
 #define BSP_LED_GPIO_PORT  GPIOA
-#define BSP_LED_GPIO_PIN   (4)
+#define BSP_LED_GPIO_PIN   (4u)
 #define BSP_LED_GPIO_CLOCK RCC_AHBENR_GPIOAEN
-#define BSP_LED_ACTIVE_LOW (0)
+#define BSP_LED_ACTIVE_LOW (0u)
 
 /* ============================================================================
  * UART define
  * ========================================================================= */
 
-#define BSP_UART_BAUDRATE   (115200)
+#define BSP_UART_BAUDRATE   (115200u)
 #define BSP_UART            USART1
 #define BSP_UART_GPIO_PORT  GPIOA
-#define BSP_UART_TX_PIN     (9)
-#define BSP_UART_RX_PIN     (10)
+#define BSP_UART_TX_PIN     (9u)
+#define BSP_UART_RX_PIN     (10u)
 #define BSP_UART_GPIO_CLOCK RCC_AHBENR_GPIOAEN
 #define BSP_UART_CLOCK      RCC_APB2ENR_USART1EN
-#define BSP_UART_AF         (1)
+#define BSP_UART_AF         (1u)
 
 /* ============================================================================
  * BSP initialization
  * ========================================================================= */
 
 void bsp_init(void);
-
-/* ============================================================================
- * Clock
- * ========================================================================= */
-
-void bsp_clock_init(void);
 
 /* ============================================================================
  * LED
@@ -81,4 +76,4 @@ void bsp_uart_flush(void);
 }
 #endif
 
-#endif /* __BSP_H__ */
+#endif /* __STM32F030F4P6_BSP_H__ */

@@ -7,7 +7,9 @@ void blink_task(void* p_arg) {
 
     while (true) {
         bsp_led_toggle();
+#if THREAD_TASK_LOG_ENABLED
         PRINT_DBG("[%s]\t%s toggle LED\r\n", NOTE, context->name);
+#endif
         akos_thread_delay(context->delay_ticks);
     }
 }

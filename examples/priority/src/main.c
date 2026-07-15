@@ -1,14 +1,16 @@
 #include "main.h"
 
+#if EXAMPLE_DEBUG_ENABLED
 #include <stdarg.h>
 #include <stdio.h>
+#endif
 
 #define NOTE "MAIN"
 
 AKOS_THREAD_DEFINE(prio_high, THREAD_PRIO_HIGH_ID, task_prio_high, NULL, 1u, 4u,
-                   128u);
+                   APP_TASK_STACK_SIZE);
 AKOS_THREAD_DEFINE(prio_low, THREAD_PRIO_LOW_ID, task_prio_low, NULL, 2u, 4u,
-                   128u);
+                   APP_TASK_STACK_SIZE);
 
 int main(void) {
     bsp_init();
@@ -34,6 +36,7 @@ int main(void) {
     }
 }
 
+#if EXAMPLE_DEBUG_ENABLED
 void app_print_dbg(const char* format, ...) {
     char log_buffer[LOG_BUFFER_SIZE];
     va_list arguments;
@@ -47,3 +50,4 @@ void app_print_dbg(const char* format, ...) {
         bsp_uart_puts(log_buffer);
     }
 }
+#endif

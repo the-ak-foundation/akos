@@ -138,7 +138,7 @@
                is no need to call the 2 first functions listed above, since SystemCoreClock
                variable is updated automatically.
   */
-uint32_t SystemCoreClock = 8000000;
+uint32_t SystemCoreClock = 72000000U;
 const uint8_t AHBPrescTable[16U] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
 
@@ -149,6 +149,8 @@ const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
 /** @addtogroup STM32F1xx_System_Private_FunctionPrototypes
   * @{
   */
+
+static void SetSysClock(void);
 
 #if defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F101xG) || defined(STM32F103xE) || defined(STM32F103xG)
 #ifdef DATA_IN_ExtSRAM
@@ -179,6 +181,8 @@ void SystemInit (void)
     SystemInit_ExtMemCtl(); 
   #endif /* DATA_IN_ExtSRAM */
 #endif 
+
+  SetSysClock();
 
   /* Configure the Vector Table location -------------------------------------*/
 #if defined(USER_VECT_TAB_ADDRESS)
@@ -327,6 +331,55 @@ void SystemCoreClockUpdate (void)
   tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4U)];
   /* HCLK clock frequency */
   SystemCoreClock >>= tmp;  
+}
+
+/**
+  * @brief  Configure HSE through PLL as the 72 MHz system clock.
+  * @param  None
+  * @retval None
+  */
+static void SetSysClock(void)
+{
+  RCC->CR |= RCC_CR_HSION;
+  while ((RCC->CR & RCC_CR_HSIRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI)
+  {
+  }
+
+  RCC->CR &= ~RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) != 0U)
+  {
+  }
+
+  RCC->CR |= RCC_CR_HSEON;
+  while ((RCC->CR & RCC_CR_HSERDY) == 0U)
+  {
+  }
+
+  /* 72 MHz requires two Flash wait states and prefetch. */
+  FLASH->ACR = (FLASH->ACR & ~FLASH_ACR_LATENCY) |
+               (2U << FLASH_ACR_LATENCY_Pos) | FLASH_ACR_PRFTBE;
+
+  RCC->CFGR &= ~(RCC_CFGR_SW | RCC_CFGR_HPRE | RCC_CFGR_PPRE1 |
+                 RCC_CFGR_PPRE2 | RCC_CFGR_ADCPRE | RCC_CFGR_PLLSRC |
+                 RCC_CFGR_PLLXTPRE | RCC_CFGR_PLLMULL);
+  RCC->CFGR |= RCC_CFGR_HPRE_DIV1 | RCC_CFGR_PPRE1_DIV2 |
+               RCC_CFGR_PPRE2_DIV1 | RCC_CFGR_ADCPRE_DIV6 |
+               RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9;
+
+  RCC->CR |= RCC_CR_PLLON;
+  while ((RCC->CR & RCC_CR_PLLRDY) == 0U)
+  {
+  }
+
+  RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
+  while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
+  {
+  }
 }
 
 #if defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F101xG) || defined(STM32F103xE) || defined(STM32F103xG)
