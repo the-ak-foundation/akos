@@ -1,18 +1,19 @@
 /**
-  ******************************************************************************
-  * @file    core.c
-  * @brief   Kernel initialization, startup and critical-section control.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  * 
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    core.c
+ * @brief   Kernel initialization, startup and critical-section control.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "core.h"
+
 #include "config.h"
 #include "log.h"
 #include "message.h"
@@ -28,30 +29,26 @@ static uint16_t critical_nesting_count = (uint16_t)0u;
 /**
  * @brief Enter nested critical section.
  */
-void akos_core_enter_critical(void)
-{
-    port_disable_interrupts
+void akos_core_enter_critical(void) {
+    PORT_DISABLE_INTERRUPTS
     critical_nesting_count++;
 }
 
 /**
  * @brief Exit nested critical section.
  */
-void akos_core_exit_critical(void)
-{
+void akos_core_exit_critical(void) {
     core_assert(critical_nesting_count, "NESTING CRITICAL UNBALANCED");
     critical_nesting_count--;
-    if (critical_nesting_count == 0)
-    {
-        port_enable_interrupts
+    if (critical_nesting_count == 0) {
+        PORT_ENABLE_INTERRUPTS
     }
 }
 
 /**
  * @brief Initialize kernel modules.
  */
-void akos_core_init(void)
-{
+void akos_core_init(void) {
     akos_port_systick_init_freq(OS_CFG_SYSTICK_CLOCK_HZ);
     akos_priority_init();
     akos_message_init();
@@ -62,9 +59,8 @@ void akos_core_init(void)
 /**
  * @brief Start scheduler and switch to the first task.
  */
-void akos_core_run(void)
-{
+void akos_core_run(void) {
     akos_thread_start();
-    port_setup_PendSV();
+    PORT_SETUP_PENDSV();
     akos_port_start_first_task();
 }

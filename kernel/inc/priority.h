@@ -1,15 +1,15 @@
 /**
-  ******************************************************************************
-  * @file    priority.h
-  * @brief   Priority bitmap scheduler helpers.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  *
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    priority.h
+ * @brief   Priority bitmap scheduler helpers.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 #ifndef __PRIORITY_H__
 #define __PRIORITY_H__
@@ -20,12 +20,12 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Defines -------------------------------------------------------------------*/
-#define OS_PRIO_TBL_SIZE (((OS_CFG_PRIO_MAX - 1u) / (8u)) + 1u) /**< Number of bytes in the ready-priority bitmap table. */
+/**< Number of bytes in the ready-priority bitmap table. */
+#define OS_PRIO_TBL_SIZE (((OS_CFG_PRIO_MAX - 1u) / (8u)) + 1u)
 
 /* Function prototypes -------------------------------------------------------*/
 /**

@@ -1,15 +1,15 @@
 /**
-  ******************************************************************************
-  * @file    port.h
-  * @brief   Cortex-M3 port API for AKOS.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  *
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    port.h
+ * @brief   Cortex-M3 port API for AKOS.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 #ifndef __PORT_H__
 #define __PORT_H__
@@ -19,21 +19,24 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Defines -------------------------------------------------------------------*/
-#define port_disable_interrupts             { __asm inline("CPSID   I \n"); } /**< Disable global interrupts. */
-#define port_enable_interrupts              { __asm inline("CPSIE   I \n"); } /**< Enable global interrupts. */
+// clang-format off
+
+#define PORT_DISABLE_INTERRUPTS             { __asm inline("CPSID   I \n"); } /**< Disable global interrupts. */
+#define PORT_ENABLE_INTERRUPTS              { __asm inline("CPSIE   I \n"); } /**< Enable global interrupts. */
 
 /* Make PendSV and SysTick the lowest priority interrupts. */
-#define port_setup_PendSV()                 (*(uint32_t volatile *)0xE000ED20 |= (0xFFU << 16)) /**< Configure PendSV priority. */
-#define port_trigger_PendSV()               (*(uint32_t volatile *)0xE000ED04 = (1U << 28))     /**< Trigger PendSV exception. */
+#define PORT_SETUP_PENDSV()                 (*(uint32_t volatile *)0xE000ED20 |= (0xFFU << 16)) /**< Configure PendSV priority. */
+#define PORT_TRIGGER_PENDSV()               (*(uint32_t volatile *)0xE000ED04 = (1U << 28))     /**< Trigger PendSV exception. */
 
-#define port_SVCHandler                     SVC_Handler     /**< Map AKOS SVC handler to CMSIS name. */
-#define port_PendSVHandler                  PendSV_Handler  /**< Map AKOS PendSV handler to CMSIS name. */
-#define port_SysTickHandler                 SysTick_Handler /**< Map AKOS SysTick handler to CMSIS name. */
+#define PORT_SVC_HANDLER(void)               SVC_Handler(void)     /**< Map AKOS SVC handler to CMSIS name. */
+#define PORT_PENDSV_HANDLER(void)            PendSV_Handler(void)  /**< Map AKOS PendSV handler to CMSIS name. */
+#define PORT_SYSTICK_HANDLER(void)           SysTick_Handler(void) /**< Map AKOS SysTick handler to CMSIS name. */
+
+// clang-format on
 
 /* Function prototypes -------------------------------------------------------*/
 /**
@@ -55,10 +58,8 @@ void akos_port_start_first_task(void);
  * @param p_arg Thread argument.
  * @return Initial top-of-stack pointer.
  */
-uint32_t *akos_port_task_stack_init(uint32_t *p_stack,
-                                    size_t stack_size,
-                                    void (*pf_task)(void *),
-                                    void *p_arg);
+uint32_t* akos_port_task_stack_init(uint32_t* p_stack, size_t stack_size, void (*pf_task)(void*),
+                                    void* p_arg);
 
 #ifdef __cplusplus
 }

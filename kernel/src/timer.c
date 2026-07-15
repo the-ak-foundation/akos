@@ -1,62 +1,61 @@
 /**
-  ******************************************************************************
-  * @file    timer.c
-  * @brief   Software timer pool, lists, and processing loop.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  * 
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    timer.c
+ * @brief   Software timer pool, lists, and processing loop.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
+#include "timer.h"
+
 #include "core.h"
 #include "list.h"
 #include "message.h"
-#include "timer.h"
 #include "thread.h"
 
 /* Private variables ---------------------------------------------------------*/
 static ak_timer_t timer_pool[OS_CFG_TIMER_POOL_SIZE]; /**< Static software timer pool. */
-static ak_timer_t *free_list_timer_pool;              /**< Free-list head for timer pool. */
+static ak_timer_t* free_list_timer_pool;              /**< Free-list head for timer pool. */
 static uint8_t timer_pool_used;                       /**< Number of allocated timer objects. */
 
-static list_t timer_list_1;                           /**< Active timer list. */
-static list_t timer_list_2;                           /**< Overflow timer list. */
+static list_t timer_list_1; /**< Active timer list. */
+static list_t timer_list_2; /**< Overflow timer list. */
 
-static list_t *volatile timer_list_ptr;               /**< Points to the timer list currently being used. */
-static list_t *volatile overflow_timer_list_ptr;      /**< Points to the timer list currently being used to hold overflowed timers. */
+static list_t* volatile timer_list_ptr; /**< Points to the timer list currently being used. */
+static list_t* volatile overflow_timer_list_ptr; /**< Points to the timer list currently being used
+                                                    to hold overflowed timers. */
 
-static volatile uint32_t next_tick_to_unblock_timer = (uint32_t)OS_CFG_DELAY_MAX; /**< Next timer unblock tick. */
+static volatile uint32_t next_tick_to_unblock_timer =
+    (uint32_t)OS_CFG_DELAY_MAX; /**< Next timer unblock tick. */
 
 /* Private function prototypes ----------------------------------------------*/
 static void timer_pool_init(void);
 static void init_timer_lists(void);
 static void timer_switch_lists(void);
-static void add_timer_to_list(ak_timer_t *p_timer);
+static void add_timer_to_list(ak_timer_t* p_timer);
 static void update_next_tick_to_unblock(void);
 
 /* Function definitions ------------------------------------------------------*/
 /**
  * @brief Initialize timer object free-list.
  */
-static void timer_pool_init(void)
-{
+static void timer_pool_init(void) {
     uint8_t index;
 
-    free_list_timer_pool = (ak_timer_t *)timer_pool;
+    free_list_timer_pool = (ak_timer_t*)timer_pool;
 
-    for (index = 0; index < OS_CFG_TIMER_POOL_SIZE; index++)
-    {
-        if (index == (OS_CFG_TIMER_POOL_SIZE - 1))
-        {
+    for (index = 0; index < OS_CFG_TIMER_POOL_SIZE; index++) {
+        if (index == (OS_CFG_TIMER_POOL_SIZE - 1)) {
             timer_pool[index].next = NULL;
         }
-        else
-        {
-            timer_pool[index].next = (ak_timer_t *)&timer_pool[index + 1];
+        else {
+            timer_pool[index].next = (ak_timer_t*)&timer_pool[index + 1];
         }
     }
 
@@ -66,12 +65,11 @@ static void timer_pool_init(void)
 /**
  * @brief Initialize timer active/overflow lists.
  */
-static void init_timer_lists(void)
-{
+static void init_timer_lists(void) {
     /* Initialize lists */
     akos_list_init(&timer_list_1);
     akos_list_init(&timer_list_2);
-    timer_list_ptr = &timer_list_1;
+    timer_list_ptr          = &timer_list_1;
     overflow_timer_list_ptr = &timer_list_2;
     /********************/
 }
@@ -79,19 +77,16 @@ static void init_timer_lists(void)
 /**
  * @brief Swap active and overflow timer lists on tick wrap.
  */
-static void timer_switch_lists(void)
-{
-    list_t *p_list_temp;
-    p_list_temp = timer_list_ptr;
-    timer_list_ptr = overflow_timer_list_ptr;
+static void timer_switch_lists(void) {
+    list_t* p_list_temp;
+    p_list_temp             = timer_list_ptr;
+    timer_list_ptr          = overflow_timer_list_ptr;
     overflow_timer_list_ptr = p_list_temp;
 
-    if (list_is_empty(timer_list_ptr) == OS_TRUE)
-    {
+    if (list_is_empty(timer_list_ptr) == OS_TRUE) {
         next_tick_to_unblock_timer = OS_CFG_DELAY_MAX;
     }
-    else
-    {
+    else {
         next_tick_to_unblock_timer = 0u;
     }
 }
@@ -100,24 +95,19 @@ static void timer_switch_lists(void)
  * @brief Insert timer into active or overflow list by trigger tick.
  * @param p_timer Timer object.
  */
-static void add_timer_to_list(ak_timer_t *p_timer)
-{
+static void add_timer_to_list(ak_timer_t* p_timer) {
     AKOS_CORE_ENTER_CRITICAL();
-    {
-        const uint32_t const_tick = akos_thread_get_tick();
-        uint32_t tick_to_trigger = list_item_get_value(&(p_timer->timer_list_item));
-        if (tick_to_trigger < const_tick)
-        {
-            /* Wake time has overflowed.  Place this item in the overflow
-             * list. */
-            akos_list_insert(overflow_timer_list_ptr, &(p_timer->timer_list_item));
-        }
-        else
-        {
-            /* The wake time has not overflowed, so the current block list
-             * is used. */
-            akos_list_insert(timer_list_ptr, &(p_timer->timer_list_item));
-        }
+    const uint32_t const_tick = akos_thread_get_tick();
+    uint32_t tick_to_trigger  = list_item_get_value(&(p_timer->timer_list_item));
+    if (tick_to_trigger < const_tick) {
+        /* Wake time has overflowed.  Place this item in the overflow
+         * list. */
+        akos_list_insert(overflow_timer_list_ptr, &(p_timer->timer_list_item));
+    }
+    else {
+        /* The wake time has not overflowed, so the current block list
+         * is used. */
+        akos_list_insert(timer_list_ptr, &(p_timer->timer_list_item));
     }
     AKOS_CORE_EXIT_CRITICAL();
 }
@@ -125,20 +115,16 @@ static void add_timer_to_list(ak_timer_t *p_timer)
 /**
  * @brief Recompute next timer-unblock tick.
  */
-static void update_next_tick_to_unblock(void)
-{
-    ak_timer_t *p_timer;
+static void update_next_tick_to_unblock(void) {
+    ak_timer_t* p_timer;
     uint32_t item_value;
-    if (list_is_empty(timer_list_ptr) == OS_TRUE)
-    {
+    if (list_is_empty(timer_list_ptr) == OS_TRUE) {
         next_tick_to_unblock_timer = OS_CFG_DELAY_MAX;
     }
-    else
-    {
-        p_timer = list_get_owner_of_head_item(timer_list_ptr);
+    else {
+        p_timer    = list_get_owner_of_head_item(timer_list_ptr);
         item_value = list_item_get_value(&(p_timer->timer_list_item));
-        if (item_value < next_tick_to_unblock_timer)
-        {
+        if (item_value < next_tick_to_unblock_timer) {
             next_tick_to_unblock_timer = item_value;
         }
     }
@@ -154,49 +140,43 @@ static void update_next_tick_to_unblock(void)
  * @param type Timer type.
  * @return Timer pointer, or NULL on failure.
  */
-ak_timer_t *akos_timer_create(timer_id_t id, int32_t sig, timer_cb func_cb, uint8_t des_thread_id, uint32_t period, timer_type_t type)
-{
+ak_timer_t* akos_timer_create(timer_id_t id, int32_t sig, timer_cb func_cb, uint8_t des_thread_id,
+                              uint32_t period, timer_type_t type) {
     /*It is important to set value for timer_list_item, because it holds time stamp*/
-    if (des_thread_id >= akos_thread_get_app_thread_count())
-    {
+    if (des_thread_id >= akos_thread_get_app_thread_count()) {
         // OSUniversalError = OS_ERR_DES_TASK_ID_INVALID;
         core_assert(0, "OS_ERR_DES_THREAD_ID_INVALID");
         return NULL;
     }
-    if (des_thread_id == akos_thread_get_timer_thread_id())
-    {
+    if (des_thread_id == akos_thread_get_timer_thread_id()) {
         // OSUniversalError = OS_ERR_CAN_NOT_SET_DES_TO_ITSELF;
         core_assert(0, "OS_ERR_CAN_NOT_SET_DES_TO_ITSELF");
         return NULL;
     }
-    if (period == 0u && type == TIMER_PERIODIC)
-    {
+    if (period == 0u && type == TIMER_PERIODIC) {
         // OSUniversalError = OS_ERR_TIMER_NOT_ACECPT_ZERO_PERIOD;
         core_assert(0, "OS_ERR_TIMER_NOT_ACECPT_ZERO_PERIOD");
         return NULL;
     }
-    ak_timer_t *p_timer;
+    ak_timer_t* p_timer;
     AKOS_CORE_ENTER_CRITICAL();
-    if ((timer_pool_used >= OS_CFG_TIMER_POOL_SIZE) || (free_list_timer_pool == NULL))
-    {
+    if ((timer_pool_used >= OS_CFG_TIMER_POOL_SIZE) || (free_list_timer_pool == NULL)) {
         AKOS_CORE_EXIT_CRITICAL();
         core_assert(0, "OS_ERR_TIMER_POOL_IS_FULL");
         return NULL;
     }
-    p_timer = free_list_timer_pool;
+    p_timer              = free_list_timer_pool;
     free_list_timer_pool = p_timer->next;
     timer_pool_used++;
     AKOS_CORE_EXIT_CRITICAL();
 
-    p_timer->id = id;
-    p_timer->sig = sig;
-    p_timer->func_cb = func_cb;
+    p_timer->id            = id;
+    p_timer->sig           = sig;
+    p_timer->func_cb       = func_cb;
     p_timer->des_thread_id = des_thread_id;
 
-    switch (type)
-    {
+    switch (type) {
     case TIMER_ONE_SHOT:
-        /* code */
         p_timer->period = 0;
         break;
     case TIMER_PERIODIC:
@@ -207,12 +187,8 @@ ak_timer_t *akos_timer_create(timer_id_t id, int32_t sig, timer_cb func_cb, uint
     }
     /* Make connection */
     akos_list_item_init(&(p_timer->timer_list_item));
-    list_item_set_owner(&(p_timer->timer_list_item), (void *)p_timer);
+    list_item_set_owner(&(p_timer->timer_list_item), (void*)p_timer);
 
-    // list_item_set_value(&(p_timer->timer_list_item), period + akos_thread_get_tick());
-    // add_timer_to_list(p_timer);
-    // update_next_tick_to_unblock();
-    // akos_thread_post_msg_pure(OS_CFG_TIMER_TASK_ID, TIMER_CMD_UPDATE);
     return p_timer;
 }
 
@@ -220,22 +196,19 @@ ak_timer_t *akos_timer_create(timer_id_t id, int32_t sig, timer_cb func_cb, uint
  * @brief Remove timer from lists and return it to pool.
  * @param p_timer Timer object.
  */
-void akos_timer_remove(ak_timer_t *p_timer)
-{
+void akos_timer_remove(ak_timer_t* p_timer) {
     AKOS_CORE_ENTER_CRITICAL();
-    if (timer_pool_used == 0u)
-    {
+    if (timer_pool_used == 0u) {
         AKOS_CORE_EXIT_CRITICAL();
         core_assert(0, "OS_ERR_TIMER_POOL_UNDERFLOW");
         return;
     }
 
-    p_timer->next = free_list_timer_pool;
+    p_timer->next        = free_list_timer_pool;
     free_list_timer_pool = p_timer;
     timer_pool_used--;
 
-    if (list_item_get_list_contain(&(p_timer->timer_list_item)) != NULL)
-    {
+    if (list_item_get_list_contain(&(p_timer->timer_list_item)) != NULL) {
         akos_list_remove(&(p_timer->timer_list_item));
     }
 
@@ -245,8 +218,7 @@ void akos_timer_remove(ak_timer_t *p_timer)
 /**
  * @brief Initialize timer module state.
  */
-void akos_timer_init(void)
-{
+void akos_timer_init(void) {
     timer_pool_init();
     init_timer_lists();
     next_tick_to_unblock_timer = OS_CFG_DELAY_MAX;
@@ -259,54 +231,43 @@ void akos_timer_init(void)
  * Processes expired timers, executes callbacks/posts signals, then blocks
  * until the next timer event (or a wakeup message).
  */
-void akos_timer_processing(void)
-{
-    msg_t *p_msg;
-    ak_timer_t *p_timer;
+void akos_timer_processing(void) {
+    msg_t* p_msg;
+    ak_timer_t* p_timer;
     uint32_t item_value;
     static uint32_t last_time = (uint32_t)0U;
-    uint32_t time_now = akos_thread_get_tick();
-    if (time_now < last_time)
-    {
+    uint32_t time_now         = akos_thread_get_tick();
+    if (time_now < last_time) {
         /* Overflown */
         timer_switch_lists();
     }
-    if (time_now >= next_tick_to_unblock_timer)
-    {
-        for (;;)
-        {
-            if (list_is_empty(timer_list_ptr) == OS_TRUE)
-            {
+    if (time_now >= next_tick_to_unblock_timer) {
+        while (true) {
+            if (list_is_empty(timer_list_ptr) == OS_TRUE) {
                 next_tick_to_unblock_timer = OS_CFG_DELAY_MAX;
                 break;
             }
-            else
-            {
-                p_timer = list_get_owner_of_head_item(timer_list_ptr);
+            else {
+                p_timer    = list_get_owner_of_head_item(timer_list_ptr);
                 item_value = list_item_get_value(&(p_timer->timer_list_item));
-                if (item_value > time_now)
-                {
+                if (item_value > time_now) {
                     /* Stop condition */
                     next_tick_to_unblock_timer = item_value;
                     break;
                 }
                 akos_list_remove(&(p_timer->timer_list_item));
 
-                if (p_timer->func_cb != NULL)
-                {
+                if (p_timer->func_cb != NULL) {
                     p_timer->func_cb();
                 }
-                else
-                {
+                else {
                     akos_thread_post_msg_pure(p_timer->des_thread_id, p_timer->sig);
                 }
-                if (p_timer->period != 0)
-                {
+                if (p_timer->period != 0) {
                     list_item_set_value(&(p_timer->timer_list_item), p_timer->period + time_now);
                     add_timer_to_list(p_timer);
                 }
-                else
-                {
+                else {
                     akos_timer_remove(p_timer); /* One shot */
                 }
                 update_next_tick_to_unblock();
@@ -314,9 +275,8 @@ void akos_timer_processing(void)
         }
     }
     last_time = time_now;
-    p_msg = akos_thread_wait_for_msg(next_tick_to_unblock_timer - time_now);
-    if (p_msg != NULL)
-    {
+    p_msg     = akos_thread_wait_for_msg(next_tick_to_unblock_timer - time_now);
+    if (p_msg != NULL) {
         akos_message_free(p_msg);
     }
 }
@@ -326,40 +286,35 @@ void akos_timer_processing(void)
  * @param p_timer Timer object.
  * @param tick_to_wait Initial delay in ticks.
  */
-void akos_timer_start(ak_timer_t *p_timer, uint32_t tick_to_wait)
-{
+void akos_timer_start(ak_timer_t* p_timer, uint32_t tick_to_wait) {
     uint32_t time_now = akos_thread_get_tick();
 
     list_item_set_value(&(p_timer->timer_list_item), tick_to_wait + time_now);
 
     add_timer_to_list(p_timer);
     update_next_tick_to_unblock();
-    akos_thread_post_msg_pure(akos_thread_get_timer_thread_id(), 0); // Dummy signal
+    akos_thread_post_msg_pure(akos_thread_get_timer_thread_id(), 0);   // Dummy signal
 }
 
 /**
  * @brief Reset a running timer to its next period.
  * @param p_timer Timer object.
  */
-void akos_timer_reset(ak_timer_t *p_timer)
-{
-    if (list_item_get_list_contain(&(p_timer->timer_list_item)) == NULL)
-    {
+void akos_timer_reset(ak_timer_t* p_timer) {
+    if (list_item_get_list_contain(&(p_timer->timer_list_item)) == NULL) {
         // OSUniversalError = OS_ERR_TIMER_IS_NOT_RUNNING;
         core_assert(0, "OS_ERR_TIMER_IS_NOT_RUNNING");
         return;
     }
     uint32_t time_now = akos_thread_get_tick();
     akos_list_remove(&(p_timer->timer_list_item));
-    if (p_timer->period != 0)
-    {
+    if (p_timer->period != 0) {
         list_item_set_value(&(p_timer->timer_list_item), p_timer->period + time_now);
         add_timer_to_list(p_timer);
     }
-    else
-    {
+    else {
         akos_timer_remove(p_timer); /* One shot */
     }
     update_next_tick_to_unblock();
-    akos_thread_post_msg_pure(akos_thread_get_timer_thread_id(), 0); // Dummy signal
+    akos_thread_post_msg_pure(akos_thread_get_timer_thread_id(), 0);   // Dummy signal
 }

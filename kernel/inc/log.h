@@ -1,15 +1,15 @@
 /**
-  ******************************************************************************
-  * @file    log.h
-  * @brief   Logging and assertion macro definitions.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  * 
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    log.h
+ * @brief   Logging and assertion macro definitions.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 #ifndef __LOG_H__
 #define __LOG_H__
@@ -40,43 +40,61 @@
 #define LOG_SIG_EN      (1u)       /**< Enable signal log channel. */
 
 #ifndef USER_PRINT
-#define USER_PRINT(fmt, ...) OS_CFG_USER_PRINT((const char *)fmt, ##__VA_ARGS__) /**< Print backend used by logging macros. */
+/** Print backend used by logging macros. */
+#define USER_PRINT(fmt, ...) OS_CFG_USER_PRINT((fmt), ##__VA_ARGS__)
 #endif
 
-#if ( LOG_DBG_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_DBG(fmt, ...) USER_PRINT(KBLU "[DEBUG: %s:%d] " KYEL fmt KNRM "\r\n", (uint8_t *)__FILE__, __LINE__, ##__VA_ARGS__) /**< Print debug log. */
+#if ((LOG_DBG_EN & OS_CFG_USE_LOG) == 1u)
+/** Print debug log. */
+#define LOG_DBG(fmt, ...) \
+    USER_PRINT(KBLU "[DEBUG: %s:%d] " KYEL fmt KNRM "\r\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define LOG_DBG(fmt, ...) ((void *)0) /**< Debug log disabled. */
+/** Debug log disabled. */
+#define LOG_DBG(fmt, ...) ((void)0)
 #endif
 
-#if ( LOG_WARN_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_WARN(fmt, ...) USER_PRINT(KYEL "[WARN: %s:%d] " KNRM fmt KNRM "\r\n", (uint8_t *)__FILE__, __LINE__, ##__VA_ARGS__) /**< Print warning log. */
+#if ((LOG_WARN_EN & OS_CFG_USE_LOG) == 1u)
+/** Print warning log. */
+#define LOG_WARN(fmt, ...) \
+    USER_PRINT(KYEL "[WARN: %s:%d] " KNRM fmt KNRM "\r\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define LOG_WARN(fmt, ...) ((void *)0) /**< Warning log disabled. */
+/** Warning log disabled. */
+#define LOG_WARN(fmt, ...) ((void)0)
 #endif
 
-#if ( LOG_PRINT_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_PRINT(fmt, ...) USER_PRINT("[PRINTLN] " fmt "\r\n", ##__VA_ARGS__) /**< Print normal log. */
+#if ((LOG_PRINT_EN & OS_CFG_USE_LOG) == 1u)
+/** Print normal log. */
+#define LOG_PRINT(fmt, ...) USER_PRINT("[PRINTLN] " fmt "\r\n", ##__VA_ARGS__)
 #else
-#define LOG_PRINT(fmt, ...) ((void *)0) /**< Print log disabled. */
+/** Print log disabled. */
+#define LOG_PRINT(fmt, ...) ((void)0)
 #endif
 
-#if ( LOG_ERROR_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_ERROR(fmt, ...) USER_PRINT(KRED "[ERROR: %s:%d] " fmt KNRM "\r\n", (uint8_t *)__FILE__, __LINE__, ##__VA_ARGS__) /**< Print error log. */
+#if ((LOG_ERROR_EN & OS_CFG_USE_LOG) == 1u)
+/** Print error log. */
+#define LOG_ERROR(fmt, ...) \
+    USER_PRINT(KRED "[ERROR: %s:%d] " fmt KNRM "\r\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define LOG_ERROR(fmt, ...) ((void *)0) /**< Error log disabled. */
+/** Error log disabled. */
+#define LOG_ERROR(fmt, ...) ((void)0)
 #endif
 
-#if ( LOG_ASSERT_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_ASSERT(fmt, ...) USER_PRINT(KRED "[ASSERT FAILED: %s:%d] " fmt KNRM "\r\n", (uint8_t *)__FILE__, __LINE__, ##__VA_ARGS__) /**< Print assert failure log. */
+#if ((LOG_ASSERT_EN & OS_CFG_USE_LOG) == 1u)
+/** Print assertion failure log. */
+#define LOG_ASSERT(fmt, ...) \
+    USER_PRINT(KRED "[ASSERT FAILED: %s:%d] " fmt KNRM "\r\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define LOG_ASSERT(fmt, ...) ((void *)0) /**< Assert log disabled. */
+/** Assert log disabled. */
+#define LOG_ASSERT(fmt, ...) ((void)0)
 #endif
 
-#if ( LOG_SIG_EN & OS_CFG_USE_LOG ) == 1
-#define LOG_SIG(fmt, ...) USER_PRINT(KGRN "[SIGNAL: %s:%d] " KMAG fmt KNRM "\r\n", (uint8_t *)__FILE__, __LINE__, ##__VA_ARGS__) /**< Print signal log. */
+#if ((LOG_SIG_EN & OS_CFG_USE_LOG) == 1u)
+/** Print signal log. */
+#define LOG_SIG(fmt, ...) \
+    USER_PRINT(KGRN "[SIGNAL: %s:%d] " KMAG fmt KNRM "\r\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define LOG_SIG(fmt, ...) ((void *)0) /**< Signal log disabled. */
+/** Signal log disabled. */
+#define LOG_SIG(fmt, ...) ((void)0)
 #endif
 
 #endif /* __LOG_H__ */

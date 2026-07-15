@@ -12,7 +12,7 @@ UseTab: Never
 ContinuationIndentWidth: 4
 
 # Line length
-ColumnLimit: 80
+ColumnLimit: 100
 
 # Braces — K&R for control flow and functions
 BreakBeforeBraces: Custom
@@ -25,7 +25,7 @@ BraceWrapping:
   AfterNamespace:        false
   AfterStruct:           false
   AfterUnion:            false
-  BeforeElse:            false
+  BeforeElse:            true
   BeforeCatch:           false
   IndentBraces:          false
   SplitEmptyFunction:    false
@@ -83,6 +83,9 @@ IncludeCategories:
 # Macro formatting
 IndentPPDirectives: None
 AlignEscapedNewlines: Left
+StatementMacros:
+  - PORT_DISABLE_INTERRUPTS
+  - PORT_ENABLE_INTERRUPTS
 
 # Comments
 ReflowComments: true

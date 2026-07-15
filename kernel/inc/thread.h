@@ -1,29 +1,28 @@
 /**
-  ******************************************************************************
-  * @file    thread.h
-  * @brief   Thread scheduling and thread messaging APIs.
-  *
-  * @author  Snoopy3921 - AK Foundation
-  * @date    Created: 2026-06-11
-  * @date    Updated: 2026-06-26
-  *
-  * @module  AKOS
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    thread.h
+ * @brief   Thread scheduling and thread messaging APIs.
+ *
+ * @author  Snoopy3921 - AK Foundation
+ * @date    Created: 2026-06-11
+ * @date    Updated: 2026-06-26
+ *
+ * @module  AKOS
+ ******************************************************************************
+ */
 
 #ifndef __THREAD_H__
 #define __THREAD_H__
 
 /* Includes ------------------------------------------------------------------*/
-#include "config.h"
-#include "message.h"
-
 #include <stddef.h>
 #include <stdint.h>
 
+#include "config.h"
+#include "message.h"
+
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Defines -------------------------------------------------------------------*/
@@ -31,24 +30,23 @@ extern "C"
  * @brief Define a static application thread descriptor in the linker task section.
  */
 #define AKOS_THREAD_DEFINE(_name, _id, _entry, _arg, _prio, _queue_size, _stack_size) \
-  const thread_t _name __attribute__((used, section("task_desc"))) = {                \
-      .id = (thread_id_t)(_id),                                                       \
-      .pf_thread = (thread_func_t)(_entry),                                           \
-      .p_arg = (void *)(_arg),                                                        \
-      .prio = (uint8_t)(_prio),                                                       \
-      .queue_size = (size_t)(_queue_size),                                            \
-      .stack_size = (size_t)(_stack_size),                                            \
-  }
+    const thread_t _name __attribute__((used, section("task_desc"))) = {              \
+        .id         = (thread_id_t)(_id),                                             \
+        .pf_thread  = (thread_func_t)(_entry),                                        \
+        .p_arg      = (void*)(_arg),                                                  \
+        .prio       = (uint8_t)(_prio),                                               \
+        .queue_size = (size_t)(_queue_size),                                          \
+        .stack_size = (size_t)(_stack_size),                                          \
+    }
 
 /* Enums ---------------------------------------------------------------------*/
 /**
  * @enum thread_state_t
  * @brief Runtime state of a thread control block.
  */
-typedef enum
-{
-    THREAD_STATE_RUNNING = 0,     /**< Currently executing thread. */
-    THREAD_STATE_READY,           /**< Ready to run, waiting for CPU. */
+typedef enum {
+    THREAD_STATE_RUNNING = 0,      /**< Currently executing thread. */
+    THREAD_STATE_READY,            /**< Ready to run, waiting for CPU. */
     THREAD_STATE_DELAYED,          /**< Blocked until tick timeout expires. */
     THREAD_STATE_SUSPENDED,        /**< Suspended explicitly by kernel/app logic. */
     THREAD_STATE_SUSPENDED_ON_MSG, /**< Waiting for message without timeout. */
@@ -57,7 +55,7 @@ typedef enum
 
 /* Typedefs ------------------------------------------------------------------*/
 /** @brief Opaque pointer to internal thread control block. */
-typedef struct thread_tcb *thread_handle_t;
+typedef struct thread_tcb* thread_handle_t;
 
 /** @brief Static thread descriptor used by @ref AKOS_THREAD_DEFINE. */
 typedef struct thread thread_t;
@@ -67,7 +65,7 @@ typedef struct thread thread_t;
  * @brief Thread entry function signature.
  * @param p_arg User-provided thread argument.
  */
-typedef void (*thread_func_t)(void *p_arg);
+typedef void (*thread_func_t)(void* p_arg);
 
 /**
  * @typedef thread_id_t
@@ -80,12 +78,11 @@ typedef uint8_t thread_id_t;
  * @struct thread
  * @brief Static thread descriptor used during thread table registration.
  */
-struct thread
-{
-    thread_id_t id;         /**< Application-level thread ID; keep these dense from 0..N-1. */
+struct thread {
+    thread_id_t id;          /**< Application-level thread ID; keep these dense from 0..N-1. */
     thread_func_t pf_thread; /**< Thread entry function. */
-    void *p_arg;            /**< Argument passed to thread entry. */
-    uint8_t prio;           /**< Scheduler priority (lower value means higher priority). */
+    void* p_arg;             /**< Argument passed to thread entry. */
+    uint8_t prio;            /**< Scheduler priority (lower value means higher priority). */
     size_t queue_size;       /**< Message queue capacity for this thread. */
     size_t stack_size;       /**< Requested stack size in 32-bit words. */
 };
@@ -144,7 +141,8 @@ void akos_thread_start(void);
  * @param p_content Payload pointer.
  * @param msg_size Payload size in bytes.
  */
-void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void *p_content, uint8_t msg_size);
+void akos_thread_post_msg_dynamic(uint8_t des_thread_id, int32_t sig, void* p_content,
+                                  uint8_t msg_size);
 
 /**
  * @brief Post pure signal message to destination thread.
@@ -158,7 +156,7 @@ void akos_thread_post_msg_pure(uint8_t des_thread_id, int32_t sig);
  * @param time_out Timeout in ticks. Use @ref OS_CFG_DELAY_MAX for infinite wait.
  * @return Message pointer, or NULL on timeout.
  */
-msg_t *akos_thread_wait_for_msg(uint32_t time_out);
+msg_t* akos_thread_wait_for_msg(uint32_t time_out);
 
 #ifdef __cplusplus
 }
