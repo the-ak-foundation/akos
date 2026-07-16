@@ -113,7 +113,7 @@ clean:
 	$(AKOS_Q)rm -rf $(BUILD_DIR)
 
 help:
-	@echo "make [BOARD=AK_BASE_KIT_STM32L151|STM32F030F4P6|STM32F103C8T6|STM32L151CBT6] [clean] [all]"
+	@echo "make [BOARD=AK_BASE_KIT_V2_3|STM32F030F4P6|STM32F103C8T6|STM32L151CBT6] [clean] [all]"
 
 # ============================================================
 # 8. Dependencies

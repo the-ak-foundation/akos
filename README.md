@@ -44,11 +44,11 @@ AKOS helps students understand how an RTOS works internally and serves as a prac
 
 | Board | MCU | Status |
 |-------|-----|--------|
-| [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target (`AK_BASE_KIT_STM32L151`, application at `0x08003000`) |
+| [AK Embedded Base Kit V2&3](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu) | STM32L151CBT6 (ARM Cortex-M3) | Primary target (`AK_BASE_KIT_V2_3`, application at `0x08003000`) |
 | STM32F030F4P6 board | STM32F030F4P6 (ARM Cortex-M0) | Example target |
 | Blue Pill | STM32F103C8T6 (ARM Cortex-M3) | Example target |
 
-### AK Base Kit flash layout
+### AK Base Kit V2&3 flash layout
 
 | Address | Region | Image or purpose |
 |---|---|---|
@@ -67,7 +67,7 @@ of internal Flash.
 sudo apt-get install gcc-arm-none-eabi cmake ninja-build
 ```
 
-**The blink LED example on [AK Embedded Base Kit](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu):**
+**The blink LED example on [AK Embedded Base Kit V2&3](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu):**
 
 [<img src="https://the-ak-foundation.github.io/akos-docs/02_result.gif" width="480"/>](https://epcb.vn/products/ak-embedded-base-kit-lap-trinh-nhung-vi-dieu-khien-mcu)
 
@@ -78,11 +78,11 @@ make help
 make clean all
 ```
 
-The command above defaults to `BOARD=AK_BASE_KIT_STM32L151` and
+The command above defaults to `BOARD=AK_BASE_KIT_V2_3` and
 `EXAMPLE=thread`. An explicit equivalent is:
 
 ```bash
-make BOARD=AK_BASE_KIT_STM32L151 EXAMPLE=thread clean all
+make BOARD=AK_BASE_KIT_V2_3 EXAMPLE=thread clean all
 ```
 
 ## Examples
