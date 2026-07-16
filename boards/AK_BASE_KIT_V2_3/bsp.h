@@ -1,5 +1,5 @@
-#ifndef __AK_BASE_KIT_STM32L151_BSP_H__
-#define __AK_BASE_KIT_STM32L151_BSP_H__
+#ifndef __AK_BASE_KIT_V2_3_BSP_H__
+#define __AK_BASE_KIT_V2_3_BSP_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -148,4 +148,4 @@ void bsp_uart_flush(void);
 }
 #endif
 
-#endif /* __AK_BASE_KIT_STM32L151_BSP_H__ */
+#endif /* __AK_BASE_KIT_V2_3_BSP_H__ */

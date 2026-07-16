@@ -39,7 +39,7 @@ static void bsp_led_pin_toggle(GPIO_TypeDef* gpio_port, uint32_t pin) {
 
 void bsp_init(void) {
     /*
-     * The AK Base Kit bootloader leaves its one-shot application jump request
+     * The AK Base Kit V2&3 bootloader leaves its one-shot application jump request
      * at 0x2000037C. Clear it explicitly so later resets enter the bootloader,
      * regardless of whether the application .bss range overlaps that address.
      */

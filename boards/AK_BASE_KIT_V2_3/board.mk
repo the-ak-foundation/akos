@@ -1,6 +1,6 @@
 ################################################################################
 # @file    board.mk
-# @brief   Application build configuration for the AK Base Kit STM32L151.
+# @brief   Application build configuration for the AK Base Kit V2&3.
 #
 # @author  BUUPQ
 # @date    Created: 2026-07-15
@@ -28,7 +28,7 @@ THIRD_PARTY_DIR := $(BOARD_DIR)/third_party
 CMSIS_DIR := $(THIRD_PARTY_DIR)/cmsis
 DEVICE_DIR := $(THIRD_PARTY_DIR)/device
 
-# The AK Base Kit bootloader jumps to the application vector table at 0x08003000.
+# The AK Base Kit V2&3 bootloader jumps to the application vector table at 0x08003000.
 APP_FLASH_ADDRESS := 0x08003000
 
 define BOARD_POST_BUILD
