@@ -1,3 +1,9 @@
+<div align="center">
+
+![Repo Traffic](https://ak-badge-proxy.caotrongphuoc.workers.dev/?username=akos&label=Repo+Traffic&color=blue&style=flat-square)
+
+</div>
+
 # AKOS - Real-Time Operating System
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
