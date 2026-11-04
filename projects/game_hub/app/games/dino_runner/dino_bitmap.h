@@ -1,7 +1,23 @@
+/**
+ ******************************************************************************
+ * @file    dino_bitmap.h
+ * @brief   Dino bitmap module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __DINO_BITMAP_H__
 #define __DINO_BITMAP_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern const uint8_t dino_stand[32];
 extern const uint8_t dino_run_1[32];
@@ -20,5 +36,9 @@ extern const uint8_t dino_ground_2[128];
 extern const uint8_t dino_ground_3[128];
 extern const uint8_t dino_ground_4[128];
 extern const uint8_t dino_ground_5[128];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DINO_BITMAP_H__ */

@@ -1,12 +1,36 @@
+/**
+ ******************************************************************************
+ * @file    hollow_game.h
+ * @brief   Hollow game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __HOLLOW_GAME_H__
 #define __HOLLOW_GAME_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdbool.h>
 #include <stdint.h>
 
-#define HOLLOW_COLUMN_COUNT (18u)
-#define HOLLOW_CAVE_WIDTH   (144u)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
+#define HOLLOW_COLUMN_COUNT    (18u)
+#define HOLLOW_CAVE_WIDTH      (144u)
 #define HOLLOW_RENDER_Y_OFFSET (-5)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef enum {
     HOLLOW_EVENT_NONE = 0u,
@@ -52,9 +76,16 @@ typedef struct {
     bool return_to_menu;
 } hollow_game_t;
 
+/*==================================================================================================
+*                                       FUNCTION PROTOTYPES
+==================================================================================================*/
 void hollow_game_init(hollow_game_t *game);
 void hollow_game_update(hollow_game_t *game, uint8_t input_state);
 void hollow_game_draw(const hollow_game_t *game);
 uint8_t hollow_game_take_events(hollow_game_t *game);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __HOLLOW_GAME_H__ */

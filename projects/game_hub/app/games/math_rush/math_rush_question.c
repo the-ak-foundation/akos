@@ -1,10 +1,29 @@
+/**
+ ******************************************************************************
+ * @file    math_rush_question.c
+ * @brief   Math rush question module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "math_rush_question.h"
 
 #include <limits.h>
 #include <stddef.h>
 
+/*==================================================================================================
+*                                         LOCAL VARIABLES
+==================================================================================================*/
+
 static uint32_t math_random_state = 0x4D415448u;
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static uint32_t math_random(void) {
     uint32_t value = math_random_state;
 
@@ -19,24 +38,23 @@ static uint32_t math_random_range(uint32_t maximum) {
     return (maximum == 0u) ? 0u : math_random() % maximum;
 }
 
-static int32_t math_apply_operation(int32_t left, int32_t right,
-                                    math_operator_t operation) {
+static int32_t math_apply_operation(int32_t left, int32_t right, math_operator_t operation) {
     switch (operation) {
-    case MATH_OPERATOR_ADD:
-        return left + right;
-    case MATH_OPERATOR_SUBTRACT:
-        return left - right;
-    case MATH_OPERATOR_MULTIPLY:
-        return left * right;
-    case MATH_OPERATOR_DIVIDE:
-        return (right == 0) ? 0 : left / right;
-    default:
-        return 0;
+        case MATH_OPERATOR_ADD:
+            return left + right;
+        case MATH_OPERATOR_SUBTRACT:
+            return left - right;
+        case MATH_OPERATOR_MULTIPLY:
+            return left * right;
+        case MATH_OPERATOR_DIVIDE:
+            return (right == 0) ? 0 : left / right;
+        default:
+            return 0;
     }
 }
 
-static void math_use_nonzero_unit_operation(
-    int32_t result, math_operator_t *operation, int32_t *operand) {
+static void math_use_nonzero_unit_operation(int32_t result, math_operator_t *operation,
+                                            int32_t *operand) {
     if (result > 999) {
         *operation = MATH_OPERATOR_SUBTRACT;
         *operand = result - 999;
@@ -44,30 +62,28 @@ static void math_use_nonzero_unit_operation(
         *operation = MATH_OPERATOR_ADD;
         *operand = -999 - result;
     } else {
-        *operation = (result > -999) ? MATH_OPERATOR_SUBTRACT :
-                                      MATH_OPERATOR_ADD;
+        *operation = (result > -999) ? MATH_OPERATOR_SUBTRACT : MATH_OPERATOR_ADD;
         *operand = 1;
     }
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void math_rush_question_seed(uint32_t seed) {
     math_random_state = (seed == 0u) ? 0x4D415448u : seed;
 }
 
-int32_t math_rush_create_wrong_answer(int32_t correct, math_operator_t op,
-                                      uint8_t level) {
+int32_t math_rush_create_wrong_answer(int32_t correct, math_operator_t op, uint8_t level) {
     static const int16_t close_offsets[] = {-2, -1, 1, 2};
-    static const int16_t medium_offsets[] = {-10, -3, -2, -1,
-                                              1,   2,  3, 10};
-    static const int16_t hard_offsets[] = {-100, -10, -2, -1,
-                                              1,   2, 10, 100};
+    static const int16_t medium_offsets[] = {-10, -3, -2, -1, 1, 2, 3, 10};
+    static const int16_t hard_offsets[] = {-100, -10, -2, -1, 1, 2, 10, 100};
     const int16_t *offsets = close_offsets;
     uint8_t offset_count = 4u;
     int32_t wrong;
     uint8_t index;
 
-    if ((op == MATH_OPERATOR_MULTIPLY) ||
-        (op == MATH_OPERATOR_DIVIDE) || (level >= 3u)) {
+    if ((op == MATH_OPERATOR_MULTIPLY) || (op == MATH_OPERATOR_DIVIDE) || (level >= 3u)) {
         offsets = medium_offsets;
         offset_count = 8u;
     }
@@ -155,8 +171,7 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
 
         left = (int32_t)(minimum + math_random_range(range - minimum));
         right = (int32_t)(minimum + math_random_range(range - minimum));
-        if ((level <= 3u) && (operation == MATH_OPERATOR_SUBTRACT) &&
-            (right > left)) {
+        if ((level <= 3u) && (operation == MATH_OPERATOR_SUBTRACT) && (right > left)) {
             int32_t swap = left;
             left = right;
             right = swap;
@@ -175,8 +190,7 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
             int32_t maximum = 999 - result;
 
             if (maximum < 1) {
-                math_use_nonzero_unit_operation(
-                    result, &second_operation, &third);
+                math_use_nonzero_unit_operation(result, &second_operation, &third);
             } else {
                 if (maximum >= (int32_t)range) {
                     maximum = (int32_t)range - 1;
@@ -195,11 +209,9 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
                 maximum = (int32_t)range - 1;
             }
             if (maximum < minimum) {
-                math_use_nonzero_unit_operation(
-                    result, &second_operation, &third);
+                math_use_nonzero_unit_operation(result, &second_operation, &third);
             } else {
-                third = minimum + (int32_t)math_random_range(
-                    (uint32_t)(maximum - minimum + 1));
+                third = minimum + (int32_t)math_random_range((uint32_t)(maximum - minimum + 1));
             }
         } else if (second_operation == MATH_OPERATOR_MULTIPLY) {
             int32_t absolute = (result < 0) ? -result : result;
@@ -212,8 +224,7 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
                 }
             }
             if (allowed_maximum < 2u) {
-                math_use_nonzero_unit_operation(
-                    result, &second_operation, &third);
+                math_use_nonzero_unit_operation(result, &second_operation, &third);
             } else {
                 third = 2 + (int32_t)math_random_range(allowed_maximum - 1u);
             }
@@ -227,8 +238,7 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
                 }
             }
             if (divisor_count == 0u) {
-                math_use_nonzero_unit_operation(
-                    result, &second_operation, &third);
+                math_use_nonzero_unit_operation(result, &second_operation, &third);
             } else {
                 third = divisors[math_random_range(divisor_count)];
             }
@@ -245,23 +255,20 @@ void math_rush_generate_question(uint8_t level, math_question_t *question) {
     question->correct_answer = result;
     question->correct_position = (math_answer_position_t)(math_random() & 1u);
     question->answers[question->correct_position] = result;
-    question->answers[question->correct_position == MATH_ANSWER_LEFT ?
-                      MATH_ANSWER_RIGHT : MATH_ANSWER_LEFT] =
-        math_rush_create_wrong_answer(
-            result, has_second_operation ? second_operation : operation,
-            level);
+    question->answers[question->correct_position == MATH_ANSWER_LEFT ? MATH_ANSWER_RIGHT
+                                                                     : MATH_ANSWER_LEFT] =
+        math_rush_create_wrong_answer(result, has_second_operation ? second_operation : operation,
+                                      level);
 }
 
-bool math_rush_check_answer(const math_question_t *question,
-                            math_answer_position_t selected) {
+bool math_rush_check_answer(const math_question_t *question, math_answer_position_t selected) {
     if ((question == NULL) || (selected >= MATH_ANSWER_COUNT)) {
         return false;
     }
     return selected == question->correct_position;
 }
 
-uint32_t math_rush_calculate_score(uint8_t level, uint8_t combo,
-                                   uint32_t remaining_time_ms) {
+uint32_t math_rush_calculate_score(uint8_t level, uint8_t combo, uint32_t remaining_time_ms) {
     uint32_t score = 10u * level;
 
     if (UINT32_MAX - score < remaining_time_ms / 100u) {

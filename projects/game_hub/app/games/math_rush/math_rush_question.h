@@ -1,8 +1,28 @@
+/**
+ ******************************************************************************
+ * @file    math_rush_question.h
+ * @brief   Math rush question module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __MATH_RUSH_QUESTION_H__
 #define __MATH_RUSH_QUESTION_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef enum {
     MATH_OPERATOR_ADD = 0,
@@ -29,13 +49,17 @@ typedef struct {
     bool has_second_operation;
 } math_question_t;
 
+/*==================================================================================================
+*                                       FUNCTION PROTOTYPES
+==================================================================================================*/
 void math_rush_question_seed(uint32_t seed);
 void math_rush_generate_question(uint8_t level, math_question_t *question);
-bool math_rush_check_answer(const math_question_t *question,
-                            math_answer_position_t selected);
-int32_t math_rush_create_wrong_answer(int32_t correct, math_operator_t op,
-                                      uint8_t level);
-uint32_t math_rush_calculate_score(uint8_t level, uint8_t combo,
-                                   uint32_t remaining_time_ms);
+bool math_rush_check_answer(const math_question_t *question, math_answer_position_t selected);
+int32_t math_rush_create_wrong_answer(int32_t correct, math_operator_t op, uint8_t level);
+uint32_t math_rush_calculate_score(uint8_t level, uint8_t combo, uint32_t remaining_time_ms);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MATH_RUSH_QUESTION_H__ */

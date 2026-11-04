@@ -1,11 +1,35 @@
+/**
+ ******************************************************************************
+ * @file    dino_game.h
+ * @brief   Dino game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __DINO_GAME_H__
 #define __DINO_GAME_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
 #define DINO_OBSTACLE_COUNT (2u)
 #define DINO_CLOUD_COUNT    (3u)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef enum {
     DINO_STATE_READY = 0,
@@ -53,10 +77,16 @@ typedef struct {
     bool return_to_menu;
 } dino_game_t;
 
+/*==================================================================================================
+*                                       FUNCTION PROTOTYPES
+==================================================================================================*/
 void dino_game_init(void *context, uint32_t seed);
 void dino_game_deinit(void *context);
-void dino_game_update(void *context, uint8_t input_state,
-                      uint32_t elapsed_ms);
+void dino_game_update(void *context, uint8_t input_state, uint32_t elapsed_ms);
 void dino_game_draw(const void *context);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DINO_GAME_H__ */

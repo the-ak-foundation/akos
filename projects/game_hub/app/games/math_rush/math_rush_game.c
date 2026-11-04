@@ -1,12 +1,29 @@
+/**
+ ******************************************************************************
+ * @file    math_rush_game.c
+ * @brief   Math rush game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "math_rush_game.h"
+
+#include "graphics.h"
+#include "audio.h"
 
 #include <limits.h>
 #include <stddef.h>
 #include <string.h>
 
-#include "app.h"
-#include "game_gfx.h"
-#include "game_hal.h"
+#include "game_input.h"
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
 
 #define MATH_RUSH_READY_TIME_MS    (1000u)
 #define MATH_RUSH_FEEDBACK_TIME_MS (600u)
@@ -14,8 +31,15 @@
 #define MATH_RUSH_SOUND_TIME_MS    (180u)
 #define MATH_RUSH_QUESTIONS_LEVEL  (10u)
 
+/*==================================================================================================
+*                                         LOCAL VARIABLES
+==================================================================================================*/
+
 static uint32_t math_rush_high_score;
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static uint32_t math_rush_question_time(uint8_t level) {
     if (level == 1u) {
         return 5000u;
@@ -52,21 +76,18 @@ static void math_rush_finish_question(math_rush_game_t *game, bool correct) {
         if (game->combo < UINT8_MAX) {
             game->combo++;
         }
-        points = math_rush_calculate_score(game->level, game->combo,
-                                           game->selected_time_ms);
-        game->score = (UINT32_MAX - game->score < points) ?
-                      UINT32_MAX : game->score + points;
+        points = math_rush_calculate_score(game->level, game->combo, game->selected_time_ms);
+        game->score = (UINT32_MAX - game->score < points) ? UINT32_MAX : game->score + points;
         game->state = MATH_RUSH_STATE_CORRECT;
-        game_buzzer_tone(2400u);
+        audio_play_tone(&game->audio, 2400u, MATH_RUSH_SOUND_TIME_MS);
     } else {
         game->combo = 0u;
         if (game->lives > 0u) {
             game->lives--;
         }
         game->state = MATH_RUSH_STATE_WRONG;
-        game_buzzer_tone(500u);
+        audio_play_tone(&game->audio, 500u, MATH_RUSH_SOUND_TIME_MS);
     }
-    game->feedback_sound_on = true;
 }
 
 static void math_rush_advance(math_rush_game_t *game) {
@@ -89,10 +110,14 @@ static void math_rush_advance(math_rush_game_t *game) {
     }
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void math_rush_reset(math_rush_game_t *game, uint32_t seed) {
     if (game == NULL) {
         return;
     }
+    audio_player_init(&game->audio);
     memset(game, 0, sizeof(*game));
     math_rush_question_seed(seed ^ 0x4D415448u);
     game->high_score = math_rush_high_score;
@@ -111,94 +136,90 @@ void math_rush_game_deinit(void *context) {
     if (game != NULL) {
         game->remaining_time_ms = 0u;
         game->input_previous = 0u;
+        audio_stop(&game->audio);
     }
-    game_buzzer_off();
 }
 
-void math_rush_game_update(void *context, uint8_t input_state,
-                           uint32_t elapsed_ms) {
+void math_rush_game_update(void *context, uint8_t input_state, uint32_t elapsed_ms) {
     math_rush_game_t *game = (math_rush_game_t *)context;
     uint8_t pressed;
 
     if (game == NULL) {
         return;
     }
+    audio_update(&game->audio, elapsed_ms);
     pressed = (uint8_t)(input_state & ~game->input_previous);
     game->input_previous = input_state;
 
     switch (game->state) {
-    case MATH_RUSH_STATE_READY:
-        game->state_time_ms += elapsed_ms;
-        if (game->state_time_ms >= MATH_RUSH_READY_TIME_MS) {
-            math_rush_begin_question(game);
-        }
-        break;
-
-    case MATH_RUSH_STATE_QUESTION:
-        /* Swap answer buttons only inside Math Rush; menu stays unchanged. */
-        if ((pressed & GAME_INPUT_DOWN) != 0u) {
-            game->selected_answer = MATH_ANSWER_LEFT;
-            game->answer_selected = true;
-        } else if ((pressed & GAME_INPUT_UP) != 0u) {
-            game->selected_answer = MATH_ANSWER_RIGHT;
-            game->answer_selected = true;
-        }
-        if (((pressed & GAME_INPUT_MODE) != 0u) && game->answer_selected) {
-            /* MODE confirms immediately. The remaining time is the bonus. */
-            game->selected_time_ms = game->remaining_time_ms;
-            math_rush_finish_question(
-                game, math_rush_check_answer(&game->question,
-                                              game->selected_answer));
-            break;
-        }
-        if (elapsed_ms >= game->remaining_time_ms) {
-            game->remaining_time_ms = 0u;
-            game->selected_time_ms = 0u;
-            math_rush_finish_question(
-                game, game->answer_selected &&
-                      math_rush_check_answer(&game->question,
-                                             game->selected_answer));
-        } else {
-            game->remaining_time_ms -= elapsed_ms;
-        }
-        break;
-
-    case MATH_RUSH_STATE_CORRECT:
-    case MATH_RUSH_STATE_WRONG:
-        game->state_time_ms += elapsed_ms;
-        if (game->feedback_sound_on &&
-            (game->state_time_ms >= MATH_RUSH_SOUND_TIME_MS)) {
-            game_buzzer_off();
-            game->feedback_sound_on = false;
-        }
-        if (game->state_time_ms >= MATH_RUSH_FEEDBACK_TIME_MS) {
-            math_rush_advance(game);
-        }
-        break;
-
-    case MATH_RUSH_STATE_LEVEL_UP:
-        game->state_time_ms += elapsed_ms;
-        if (game->state_time_ms >= MATH_RUSH_LEVEL_TIME_MS) {
-            math_rush_begin_question(game);
-        }
-        break;
-
-    case MATH_RUSH_STATE_GAME_OVER:
-        if ((pressed & GAME_INPUT_MODE) != 0u) {
-            game->return_to_menu = true;
-        } else if ((pressed & GAME_INPUT_UP) != 0u) {
-            math_rush_reset(game, game->score ^ game->state_time_ms);
-        } else {
+        case MATH_RUSH_STATE_READY:
             game->state_time_ms += elapsed_ms;
-        }
-        break;
+            if (game->state_time_ms >= MATH_RUSH_READY_TIME_MS) {
+                math_rush_begin_question(game);
+            }
+            break;
 
-    default:
-        math_rush_reset(game, 1u);
-        break;
+        case MATH_RUSH_STATE_QUESTION:
+            /* Swap answer buttons only inside Math Rush; menu stays unchanged. */
+            if ((pressed & GAME_INPUT_DOWN) != 0u) {
+                game->selected_answer = MATH_ANSWER_LEFT;
+                game->answer_selected = true;
+            } else if ((pressed & GAME_INPUT_UP) != 0u) {
+                game->selected_answer = MATH_ANSWER_RIGHT;
+                game->answer_selected = true;
+            }
+            if (((pressed & GAME_INPUT_MODE) != 0u) && game->answer_selected) {
+                /* MODE confirms immediately. The remaining time is the bonus. */
+                game->selected_time_ms = game->remaining_time_ms;
+                math_rush_finish_question(
+                    game, math_rush_check_answer(&game->question, game->selected_answer));
+                break;
+            }
+            if (elapsed_ms >= game->remaining_time_ms) {
+                game->remaining_time_ms = 0u;
+                game->selected_time_ms = 0u;
+                math_rush_finish_question(
+                    game, game->answer_selected &&
+                              math_rush_check_answer(&game->question, game->selected_answer));
+            } else {
+                game->remaining_time_ms -= elapsed_ms;
+            }
+            break;
+
+        case MATH_RUSH_STATE_CORRECT:
+        case MATH_RUSH_STATE_WRONG:
+            game->state_time_ms += elapsed_ms;
+            if (game->state_time_ms >= MATH_RUSH_FEEDBACK_TIME_MS) {
+                math_rush_advance(game);
+            }
+            break;
+
+        case MATH_RUSH_STATE_LEVEL_UP:
+            game->state_time_ms += elapsed_ms;
+            if (game->state_time_ms >= MATH_RUSH_LEVEL_TIME_MS) {
+                math_rush_begin_question(game);
+            }
+            break;
+
+        case MATH_RUSH_STATE_GAME_OVER:
+            if ((pressed & GAME_INPUT_MODE) != 0u) {
+                game->return_to_menu = true;
+            } else if ((pressed & GAME_INPUT_UP) != 0u) {
+                math_rush_reset(game, game->score ^ game->state_time_ms);
+            } else {
+                game->state_time_ms += elapsed_ms;
+            }
+            break;
+
+        default:
+            math_rush_reset(game, 1u);
+            break;
     }
 }
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static char *math_rush_append_number(char *output, uint32_t value) {
     char reverse[10];
     uint8_t count = 0u;
@@ -244,7 +265,7 @@ static void math_rush_draw_header(const math_rush_game_t *game) {
     *cursor++ = ':';
     cursor = math_rush_append_number(cursor, game->lives);
     *cursor = '\0';
-    game_gfx_draw_text(1u, 1u, text, 1u, true, false);
+    gfx_draw_text(1u, 1u, text, 1u, true, false);
 }
 
 static void math_rush_draw_question(const math_rush_game_t *game) {
@@ -265,18 +286,15 @@ static void math_rush_draw_question(const math_rush_game_t *game) {
     if (game->question.has_second_operation) {
         *cursor++ = ')';
         *cursor++ = ' ';
-        *cursor++ = math_rush_operator_char(
-            game->question.second_operation);
+        *cursor++ = math_rush_operator_char(game->question.second_operation);
         *cursor++ = ' ';
-        cursor = math_rush_append_signed(cursor,
-                                         game->question.third_operand);
+        cursor = math_rush_append_signed(cursor, game->question.third_operand);
     }
     *cursor = '\0';
     length = (uint8_t)(cursor - text);
     size = (length <= 10u) ? 2u : 1u;
-    x = (uint8_t)((GAME_DISPLAY_WIDTH -
-                   (uint16_t)length * 6u * size) / 2u);
-    game_gfx_draw_text(x, (size == 2u) ? 13u : 18u, text, size, true, false);
+    x = (uint8_t)((GFX_WIDTH - (uint16_t)length * 6u * size) / 2u);
+    gfx_draw_text(x, (size == 2u) ? 13u : 18u, text, size, true, false);
 }
 
 static void math_rush_draw_answer(uint8_t x, int32_t answer, bool selected) {
@@ -284,73 +302,71 @@ static void math_rush_draw_answer(uint8_t x, int32_t answer, bool selected) {
     char *end = math_rush_append_signed(text, answer);
     uint8_t digits = (uint8_t)(end - text);
     uint8_t size = (digits <= 4u) ? 2u : 1u;
-    uint8_t text_x = (uint8_t)(x +
-        (52u - (uint16_t)digits * 6u * size) / 2u);
+    uint8_t text_x = (uint8_t)(x + (52u - (uint16_t)digits * 6u * size) / 2u);
 
     *end = '\0';
 
     if (selected) {
-        game_display_fill_rect(x, 33u, 52u, 19u, true);
+        gfx_fill_rect(x, 33u, 52u, 19u, true);
     } else {
-        game_gfx_draw_rect(x, 33u, 52u, 19u, true);
+        gfx_draw_rect(x, 33u, 52u, 19u, true);
     }
-    game_gfx_draw_text(text_x, (size == 2u) ? 35u : 39u, text, size,
-                       !selected, selected);
+    gfx_draw_text(text_x, (size == 2u) ? 35u : 39u, text, size, !selected, selected);
 }
 
 static void math_rush_draw_time(const math_rush_game_t *game) {
     uint32_t width = 0u;
 
-    game_gfx_draw_text(1u, 56u, "T", 1u, true, false);
-    game_gfx_draw_rect(9u, 56u, 118u, 8u, true);
+    gfx_draw_text(1u, 56u, "T", 1u, true, false);
+    gfx_draw_rect(9u, 56u, 118u, 8u, true);
     if (game->question_time_ms > 0u) {
         width = (game->remaining_time_ms * 114u) / game->question_time_ms;
     }
     if (width > 0u) {
-        game_display_fill_rect(11u, 58u, (uint8_t)width, 4u, true);
+        gfx_fill_rect(11u, 58u, (uint8_t)width, 4u, true);
     }
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void math_rush_game_draw(const void *context) {
     const math_rush_game_t *game = (const math_rush_game_t *)context;
 
     if (game == NULL) {
         return;
     }
-    game_display_clear();
+    gfx_clear();
     math_rush_draw_header(game);
 
     if (game->state == MATH_RUSH_STATE_READY) {
-        game_gfx_draw_text(16u, 20u, "MATH RUSH", 2u, true, false);
-        game_gfx_draw_text(34u, 44u, "GET READY", 1u, true, false);
+        gfx_draw_text(16u, 20u, "MATH RUSH", 2u, true, false);
+        gfx_draw_text(34u, 44u, "GET READY", 1u, true, false);
         return;
     }
     if (game->state == MATH_RUSH_STATE_LEVEL_UP) {
-        game_gfx_draw_text(16u, 20u, "LEVEL UP", 2u, true, false);
+        gfx_draw_text(16u, 20u, "LEVEL UP", 2u, true, false);
         return;
     }
     if (game->state == MATH_RUSH_STATE_GAME_OVER) {
-        game_gfx_draw_text(10u, 14u, "GAME OVER", 2u, true, false);
-        game_gfx_draw_text(15u, 36u, "HI:", 1u, true, false);
-        game_gfx_draw_number(33u, 36u, game->high_score, 1u, true, false);
-        game_gfx_draw_text(15u, 48u, "UP:RETRY MODE:MENU", 1u,
-                           true, false);
+        gfx_draw_text(10u, 14u, "GAME OVER", 2u, true, false);
+        gfx_draw_text(15u, 36u, "HI:", 1u, true, false);
+        gfx_draw_number(33u, 36u, game->high_score, 1u, true, false);
+        gfx_draw_text(15u, 48u, "UP:RETRY MODE:MENU", 1u, true, false);
         return;
     }
 
     math_rush_draw_question(game);
-    math_rush_draw_answer(
-        5u, game->question.answers[MATH_ANSWER_LEFT],
-        game->answer_selected && game->selected_answer == MATH_ANSWER_LEFT);
-    math_rush_draw_answer(
-        71u, game->question.answers[MATH_ANSWER_RIGHT],
-        game->answer_selected && game->selected_answer == MATH_ANSWER_RIGHT);
+    math_rush_draw_answer(5u, game->question.answers[MATH_ANSWER_LEFT],
+                          game->answer_selected && game->selected_answer == MATH_ANSWER_LEFT);
+    math_rush_draw_answer(71u, game->question.answers[MATH_ANSWER_RIGHT],
+                          game->answer_selected && game->selected_answer == MATH_ANSWER_RIGHT);
     if (game->state == MATH_RUSH_STATE_CORRECT) {
-        game_display_fill_rect(14u, 13u, 100u, 18u, false);
-        game_gfx_draw_text(16u, 14u, "CORRECT!", 2u, true, false);
+        gfx_fill_rect(14u, 13u, 100u, 18u, false);
+        gfx_draw_text(16u, 14u, "CORRECT!", 2u, true, false);
     } else if (game->state == MATH_RUSH_STATE_WRONG) {
-        game_display_fill_rect(26u, 13u, 76u, 18u, false);
-        game_gfx_draw_text(28u, 14u, "WRONG!", 2u, true, false);
+        gfx_fill_rect(26u, 13u, 76u, 18u, false);
+        gfx_draw_text(28u, 14u, "WRONG!", 2u, true, false);
     }
     math_rush_draw_time(game);
 }

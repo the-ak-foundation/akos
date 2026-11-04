@@ -1,0 +1,15 @@
+# Ignore everything
+/*
+
+# Allow specific directories
+!/app/
+!/common/
+!/platform/
+!/services/
+
+# Allow specific files
+!/.clang-format
+!/.gitignore
+!/game_hub.cfg.mk
+!/Makefile
+!/README.md

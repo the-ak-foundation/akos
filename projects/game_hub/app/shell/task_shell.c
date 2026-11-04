@@ -1,4 +1,22 @@
+/**
+ ******************************************************************************
+ * @file    task_shell.c
+ * @brief   Task shell module
+ *
+ * @module  Game Hub - Shell
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "task_shell.h"
+
+#include "graphics.h"
+#include "display.h"
+#include "audio.h"
+#include "uart.h"
+#include "system.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -7,10 +25,17 @@
 
 #include "app.h"
 #include "boot_shared.h"
-#include "game_hal.h"
 #include "xprintf.h"
 
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
 #define SHELL_LINE_SIZE (64u)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef void (*shell_command_fn_t)(const char *arguments);
 
@@ -26,14 +51,23 @@ static void shell_buzzer(const char *arguments);
 static void shell_reboot(const char *arguments);
 static void shell_fwu(const char *arguments);
 
+/*==================================================================================================
+*                                         LOCAL VARIABLES
+==================================================================================================*/
+
+static audio_player_t shell_audio;
+
 static const shell_command_t shell_commands[] = {
-    { "help",       shell_help,         "show commands" },
-    { "lcd",        shell_lcd,          "lcd init|on|off|clear|white|checker|pixel|dump|game" },
-    { "beep",       shell_buzzer,       "beep <frequency_hz> [duration_ms] | off" },
-    { "reboot",     shell_reboot,       "reset the MCU" },
-    { "fwu",        shell_fwu,          "fwu [info]: request UART firmware update" },
+    {"help", shell_help, "show commands"},
+    {"lcd", shell_lcd, "lcd init|on|off|clear|white|checker|pixel|dump|game"},
+    {"beep", shell_buzzer, "beep <frequency_hz> [duration_ms] | off"},
+    {"reboot", shell_reboot, "reset the MCU"},
+    {"fwu", shell_fwu, "fwu [info]: request UART firmware update"},
 };
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static const char *shell_skip_spaces(const char *text) {
     while ((text != NULL) && (*text == ' ')) {
         text++;
@@ -49,10 +83,8 @@ static void shell_help(const char *arguments) {
     (void)arguments;
 
     xputs("Commands:\n");
-    for (size_t index = 0u;
-         index < sizeof(shell_commands) / sizeof(shell_commands[0]); index++) {
-        xprintf("  %-8s %s\n", shell_commands[index].name,
-                shell_commands[index].help);
+    for (size_t index = 0u; index < sizeof(shell_commands) / sizeof(shell_commands[0]); index++) {
+        xprintf("  %-8s %s\n", shell_commands[index].name, shell_commands[index].help);
     }
 }
 
@@ -60,14 +92,13 @@ static void shell_lcd_dump(void) {
     const uint8_t *buffer;
     size_t size = 0u;
 
-    buffer = game_display_get_buffer(&size);
+    buffer = gfx_get_buffer(&size);
     xprintf("LCD framebuffer: %u bytes\n", (unsigned int)size);
     for (size_t index = 0u; index < size; index++) {
         if ((index & 15u) == 0u) {
             xprintf("%04X: ", (unsigned int)index);
         }
-        xprintf("%02X%c", buffer[index],
-                ((index & 15u) == 15u) ? '\n' : ' ');
+        xprintf("%02X%c", buffer[index], ((index & 15u) == 15u) ? '\n' : ' ');
     }
 }
 
@@ -89,35 +120,34 @@ static void shell_lcd(const char *arguments) {
     akos_thread_delay(20u);
 
     if (strcmp(arguments, "init") == 0) {
-        game_display_init();
+        display_init();
         xputs("LCD initialized\n");
     } else if (strcmp(arguments, "on") == 0) {
-        game_display_set_power(true);
+        display_set_power(true);
     } else if (strcmp(arguments, "off") == 0) {
-        game_display_set_power(false);
+        display_set_power(false);
     } else if (strcmp(arguments, "clear") == 0) {
-        game_display_clear();
-        game_display_present();
+        gfx_clear();
+        display_present();
     } else if (strcmp(arguments, "white") == 0) {
-        game_display_fill_rect(0u, 0u, GAME_DISPLAY_WIDTH,
-                               GAME_DISPLAY_HEIGHT, true);
-        game_display_present();
+        gfx_fill_rect(0u, 0u, GFX_WIDTH, GFX_HEIGHT, true);
+        display_present();
     } else if (strcmp(arguments, "checker") == 0) {
-        game_display_clear();
-        for (uint8_t y = 0u; y < GAME_DISPLAY_HEIGHT; y += 8u) {
-            for (uint8_t x = 0u; x < GAME_DISPLAY_WIDTH; x += 8u) {
+        gfx_clear();
+        for (uint8_t y = 0u; y < GFX_HEIGHT; y += 8u) {
+            for (uint8_t x = 0u; x < GFX_WIDTH; x += 8u) {
                 if ((((uint8_t)(x / 8u) + (uint8_t)(y / 8u)) & 1u) != 0u) {
-                    game_display_fill_rect(x, y, 8u, 8u, true);
+                    gfx_fill_rect(x, y, 8u, 8u, true);
                 }
             }
         }
-        game_display_present();
+        display_present();
     } else if (strcmp(arguments, "pixel") == 0) {
-        game_display_clear();
-        game_display_draw_pixel(9u, 1u, true);
-        game_display_draw_pixel(13u, 4u, true);
-        game_display_draw_pixel(16u, 7u, true);
-        game_display_present();
+        gfx_clear();
+        gfx_draw_pixel(9u, 1u, true);
+        gfx_draw_pixel(13u, 4u, true);
+        gfx_draw_pixel(16u, 7u, true);
+        display_present();
     } else if (strcmp(arguments, "dump") == 0) {
         shell_lcd_dump();
     } else {
@@ -136,7 +166,7 @@ static void shell_buzzer(const char *arguments) {
         return;
     }
     if (strcmp(arguments, "off") == 0) {
-        game_buzzer_off();
+        audio_stop_all();
         return;
     }
 
@@ -145,17 +175,15 @@ static void shell_buzzer(const char *arguments) {
     if (*end != '\0') {
         duration = strtoul(end, &end, 10);
     }
-    if ((frequency < 20u) || (frequency > 20000u) ||
-        (duration > 5000u)) {
+    if ((frequency < 20u) || (frequency > 20000u) || (duration > 5000u)) {
         xputs("Range: frequency 20..20000 Hz, duration 0..5000 ms\n");
         return;
     }
 
-    game_buzzer_init();
-    game_buzzer_tone((uint16_t)frequency);
+    audio_play_tone(&shell_audio, (uint16_t)frequency, (uint32_t)duration);
     if (duration > 0u) {
         akos_thread_delay((uint32_t)duration);
-        game_buzzer_off();
+        audio_update(&shell_audio, (uint32_t)duration);
     }
 }
 
@@ -163,7 +191,7 @@ static void shell_reboot(const char *arguments) {
     (void)arguments;
     xputs("Rebooting...\n");
     akos_thread_delay(20u);
-    game_system_reboot();
+    system_reboot();
 }
 
 static void shell_fwu(const char *arguments) {
@@ -172,9 +200,8 @@ static void shell_fwu(const char *arguments) {
     arguments = shell_skip_spaces(arguments);
     if ((arguments != NULL) && (strcmp(arguments, "info") == 0)) {
         boot_shared_get_app_command(&command);
-        xprintf("BSF app cmd=%u container=%u io=%u dst=0x%08lX src=0x%08lX\n",
-                command.command, command.container, command.io_driver,
-                (unsigned long)command.destination_address,
+        xprintf("BSF app cmd=%u container=%u io=%u dst=0x%08lX src=0x%08lX\n", command.command,
+                command.container, command.io_driver, (unsigned long)command.destination_address,
                 (unsigned long)command.source_address);
         return;
     }
@@ -185,7 +212,7 @@ static void shell_fwu(const char *arguments) {
 
     if (boot_shared_request_uart_update()) {
         /* Match the reference shell: reset immediately after arming BSF. */
-        game_system_reboot();
+        system_reboot();
     } else {
         xputs("ERROR: cannot write boot share; reset cancelled.\n");
     }
@@ -201,8 +228,7 @@ static void shell_execute(char *line) {
         *arguments++ = '\0';
     }
 
-    for (size_t index = 0u;
-         index < sizeof(shell_commands) / sizeof(shell_commands[0]); index++) {
+    for (size_t index = 0u; index < sizeof(shell_commands) / sizeof(shell_commands[0]); index++) {
         if (strcmp(line, shell_commands[index].name) == 0) {
             shell_commands[index].function(arguments);
             return;
@@ -212,6 +238,9 @@ static void shell_execute(char *line) {
     xprintf("Unknown command: %s. Type 'help'.\n", line);
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void task_shell(void *argument) {
     char line[SHELL_LINE_SIZE];
     size_t length = 0u;
@@ -223,7 +252,7 @@ void task_shell(void *argument) {
     while (true) {
         char character;
 
-        if (!game_uart_try_getc(&character)) {
+        if (!uart_try_getc(&character)) {
             akos_thread_delay(1u);
             continue;
         }
@@ -243,7 +272,7 @@ void task_shell(void *argument) {
             }
         } else if ((character >= ' ') && (length + 1u < sizeof(line))) {
             line[length++] = character;
-            game_uart_putc(character);
+            uart_putc(character);
         }
     }
 }

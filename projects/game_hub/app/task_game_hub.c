@@ -1,16 +1,44 @@
+/**
+ ******************************************************************************
+ * @file    task_game_hub.c
+ * @brief   Task game hub module
+ *
+ * @module  Game Hub - App
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "app.h"
 
-#include "game_hal.h"
+#include "app_dbg.h"
+#include "graphics.h"
+#include "display.h"
+#include "bsp.h"
+
 #include "game_hub_logo.h"
 #include "game_manager.h"
+#if GAME_HUB_ENABLE_HOLLOW
 #include "hollow_audio.h"
+#endif
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
 
 #define GAME_HUB_SPLASH_MS (3000u)
-#define GAME_HUB_LOGO_X \
-    ((GAME_DISPLAY_WIDTH - GAME_HUB_LOGO_WIDTH) / 2u)
+#define GAME_HUB_LOGO_X    ((GFX_WIDTH - GAME_HUB_LOGO_WIDTH) / 2u)
+
+/*==================================================================================================
+*                                         LOCAL VARIABLES
+==================================================================================================*/
 
 static volatile bool game_display_paused;
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void game_app_display_pause(void) {
     game_display_paused = true;
 }
@@ -28,22 +56,29 @@ void task_game_hub(void *argument) {
 
     /* Match the reference application: initialize OLED 100 ms after startup. */
     akos_thread_delay(100u);
-    game_display_init();
-    game_display_set_power(true);
-    hollow_audio_init();
-    game_uart_puts("OLED display: INITIALIZED\n");
+    if (display_init()) {
+        APP_DBG("OLED bus: READY\n");
+    } else {
+        APP_DBG("OLED bus: NO ACK\n");
+    }
+    display_set_power(true);
 
-    game_display_clear();
-    game_display_draw_bitmap(GAME_HUB_LOGO_X, 0u, game_hub_logo,
-                             GAME_HUB_LOGO_WIDTH, GAME_HUB_LOGO_HEIGHT, true);
-    game_display_present();
+#if GAME_HUB_ENABLE_HOLLOW
+    hollow_audio_init();
+#endif
+    APP_DBG("OLED display: INITIALIZED\n");
+
+    gfx_clear();
+    gfx_draw_bitmap(GAME_HUB_LOGO_X, 0u, game_hub_logo, GAME_HUB_LOGO_WIDTH, GAME_HUB_LOGO_HEIGHT,
+                    true);
+    display_present();
     akos_thread_delay(GAME_HUB_SPLASH_MS);
 
     game_manager_init(&manager);
     next_frame = akos_thread_get_tick();
 
     while (true) {
-        uint8_t input_state = 0u;
+        uint8_t input_state;
         uint32_t now;
 
         if (game_display_paused) {
@@ -52,26 +87,20 @@ void task_game_hub(void *argument) {
             continue;
         }
 
-        if (game_button_is_pressed(GAME_BUTTON_UP)) {
-            input_state |= GAME_INPUT_UP;
-        }
-        if (game_button_is_pressed(GAME_BUTTON_DOWN)) {
-            input_state |= GAME_INPUT_DOWN;
-        }
-        if (game_button_is_pressed(GAME_BUTTON_MODE)) {
-            input_state |= GAME_INPUT_MODE;
-        }
+        input_state = game_input_read();
 
         /* The original Arduboy game updates at 60 Hz and renders at 30 FPS. */
         game_manager_update(&manager, input_state, 16u);
         game_manager_update(&manager, input_state, 17u);
+#if GAME_HUB_ENABLE_HOLLOW
         now = akos_thread_get_tick();
         hollow_audio_play_events(game_manager_take_events(&manager), now);
         hollow_audio_update(now);
+#endif
         game_manager_draw(&manager);
-        game_display_present();
+        display_present();
         if (first_frame) {
-            game_led_write(GAME_LED_2, true);
+            bsp_led_write(BSP_LED_2, true);
             first_frame = false;
         }
         next_frame += GAME_DISPLAY_PERIOD_TICKS;

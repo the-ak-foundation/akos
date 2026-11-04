@@ -1,3 +1,15 @@
+/**
+ ******************************************************************************
+ * @file    boot_shared.c
+ * @brief   Boot shared module
+ *
+ * @module  Game Hub - Platform
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "boot_shared.h"
 
 #include <stddef.h>
@@ -6,19 +18,27 @@
 
 #include "stm32l1xx.h"
 
-#define BOOT_SHARED_ADDRESS            (0x08002000u)
-#define BOOT_APPLICATION_ADDRESS       (0x08003000u)
-#define BOOT_COMMAND_UPDATE_REQUEST    (0x02u)
-#define BOOT_CONTAINER_DIRECTLY        (0x01u)
-#define BOOT_IO_DRIVER_UART            (0x02u)
-#define BOOT_FLASH_TIMEOUT             (1000000u)
-#define BOOT_FLASH_PEKEY1              (0x89ABCDEFu)
-#define BOOT_FLASH_PEKEY2              (0x02030405u)
-#define BOOT_FLASH_PRGKEY1             (0x8C9DAEBFu)
-#define BOOT_FLASH_PRGKEY2             (0x13141516u)
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
+#define BOOT_SHARED_ADDRESS         (0x08002000u)
+#define BOOT_APPLICATION_ADDRESS    (0x08003000u)
+#define BOOT_COMMAND_UPDATE_REQUEST (0x02u)
+#define BOOT_CONTAINER_DIRECTLY     (0x01u)
+#define BOOT_IO_DRIVER_UART         (0x02u)
+#define BOOT_FLASH_TIMEOUT          (1000000u)
+#define BOOT_FLASH_PEKEY1           (0x89ABCDEFu)
+#define BOOT_FLASH_PEKEY2           (0x02030405u)
+#define BOOT_FLASH_PRGKEY1          (0x8C9DAEBFu)
+#define BOOT_FLASH_PRGKEY2          (0x13141516u)
 /* STM32L1 StdPeriph FLASH_GetStatus() treats SR[12:8] as errors. Bit 12
    (OPTVERRUSR) is absent from the reduced CMSIS header used by this project. */
-#define BOOT_FLASH_ERROR_MASK          (0x00001F00u)
+#define BOOT_FLASH_ERROR_MASK (0x00001F00u)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef struct {
     uint32_t psk;
@@ -26,6 +46,9 @@ typedef struct {
     uint16_t checksum;
 } boot_firmware_header_t;
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 typedef struct __attribute__((packed)) {
     uint8_t type;
     uint8_t source_task_id;
@@ -53,15 +76,15 @@ typedef struct {
     boot_firmware_command_t app_command;
 } boot_shared_data_t;
 
-_Static_assert(sizeof(boot_firmware_header_t) == 12u,
-               "Boot firmware header ABI mismatch");
-_Static_assert(sizeof(boot_firmware_command_t) == 20u,
-               "Boot firmware command ABI mismatch");
-_Static_assert(sizeof(boot_shared_data_t) == 88u,
-               "Boot share ABI mismatch");
+_Static_assert(sizeof(boot_firmware_header_t) == 12u, "Boot firmware header ABI mismatch");
+_Static_assert(sizeof(boot_firmware_command_t) == 20u, "Boot firmware command ABI mismatch");
+_Static_assert(sizeof(boot_shared_data_t) == 88u, "Boot share ABI mismatch");
 _Static_assert(offsetof(boot_shared_data_t, app_command) == 68u,
                "Boot app command offset mismatch");
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static bool boot_flash_wait(void) {
     uint32_t timeout = BOOT_FLASH_TIMEOUT;
 
@@ -117,6 +140,9 @@ static bool boot_flash_write(const uint8_t *data, size_t size) {
     return true;
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 bool boot_shared_request_uart_update(void) {
     boot_shared_data_t data;
     uint32_t interrupt_state = __get_PRIMASK();
@@ -128,8 +154,7 @@ bool boot_shared_request_uart_update(void) {
     data.app_command.io_driver = BOOT_IO_DRIVER_UART;
     data.app_command.destination_address = BOOT_APPLICATION_ADDRESS;
     data.app_command.source_address = 0u;
-    memset(&data.app_command.host_response, 0,
-           sizeof(data.app_command.host_response));
+    memset(&data.app_command.host_response, 0, sizeof(data.app_command.host_response));
 
     __disable_irq();
     success = boot_flash_unlock() && boot_flash_erase_page() &&
@@ -142,13 +167,11 @@ bool boot_shared_request_uart_update(void) {
     }
 
     return success &&
-           (memcmp(&data, (const void *)(uintptr_t)BOOT_SHARED_ADDRESS,
-                   sizeof(data)) == 0);
+           (memcmp(&data, (const void *)(uintptr_t)BOOT_SHARED_ADDRESS, sizeof(data)) == 0);
 }
 
 void boot_shared_get_app_command(boot_shared_app_command_t *command) {
-    const boot_shared_data_t *data =
-        (const boot_shared_data_t *)(uintptr_t)BOOT_SHARED_ADDRESS;
+    const boot_shared_data_t *data = (const boot_shared_data_t *)(uintptr_t)BOOT_SHARED_ADDRESS;
 
     if (command == NULL) {
         return;

@@ -1,18 +1,41 @@
+/**
+ ******************************************************************************
+ * @file    auto_snake_game.h
+ * @brief   Auto snake game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __AUTO_SNAKE_GAME_H__
 #define __AUTO_SNAKE_GAME_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdbool.h>
 #include <stdint.h>
 
-#define AUTO_SNAKE_GRID_WIDTH   (32u)
-#define AUTO_SNAKE_GRID_HEIGHT  (16u)
-#define AUTO_SNAKE_CELL_PITCH   (4u)
-#define AUTO_SNAKE_SEGMENT_SIZE (3u)
-#define AUTO_SNAKE_MAX_LENGTH   (60u)
-#define AUTO_SNAKE_KEEP_LENGTH  (10u)
-#define AUTO_SNAKE_BITE_OFFSET  (10u)
-#define AUTO_SNAKE_MAX_DETACHED_LENGTH \
-    (AUTO_SNAKE_MAX_LENGTH - AUTO_SNAKE_KEEP_LENGTH)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
+#define AUTO_SNAKE_GRID_WIDTH          (32u)
+#define AUTO_SNAKE_GRID_HEIGHT         (16u)
+#define AUTO_SNAKE_CELL_PITCH          (4u)
+#define AUTO_SNAKE_SEGMENT_SIZE        (3u)
+#define AUTO_SNAKE_MAX_LENGTH          (60u)
+#define AUTO_SNAKE_KEEP_LENGTH         (10u)
+#define AUTO_SNAKE_BITE_OFFSET         (10u)
+#define AUTO_SNAKE_MAX_DETACHED_LENGTH (AUTO_SNAKE_MAX_LENGTH - AUTO_SNAKE_KEEP_LENGTH)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef uint16_t auto_snake_cell_t;
 
@@ -82,15 +105,20 @@ typedef struct {
     bool return_to_menu;
 } auto_snake_game_t;
 
-_Static_assert(sizeof(auto_snake_t) <= 128u,
-               "auto_snake_t uses too much RAM");
+_Static_assert(sizeof(auto_snake_t) <= 128u, "auto_snake_t uses too much RAM");
 _Static_assert(sizeof(auto_snake_game_t) <= 512u,
                "AUTO SNAKE context exceeds Game Manager storage");
 
+/*==================================================================================================
+*                                       FUNCTION PROTOTYPES
+==================================================================================================*/
 void auto_snake_game_init(void *context, uint32_t seed);
 void auto_snake_game_deinit(void *context);
-void auto_snake_game_update(void *context, uint8_t input_state,
-                            uint32_t elapsed_ms);
+void auto_snake_game_update(void *context, uint8_t input_state, uint32_t elapsed_ms);
 void auto_snake_game_draw(const void *context);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __AUTO_SNAKE_GAME_H__ */

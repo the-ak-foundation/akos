@@ -1,12 +1,28 @@
+/**
+ ******************************************************************************
+ * @file    dino_game.c
+ * @brief   Dino game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "dino_game.h"
+
+#include "graphics.h"
 
 #include <stddef.h>
 #include <string.h>
 
-#include "app.h"
+#include "game_input.h"
 #include "dino_bitmap.h"
-#include "game_gfx.h"
-#include "game_hal.h"
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
 
 #define DINO_UPDATE_MS             (16u)
 #define DINO_PLAYER_X              (10)
@@ -33,6 +49,9 @@
 #define DINO_GROUND_TILE_COUNT     (5u)
 #define DINO_CACTUS_SINK_PIXELS    (4)
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static uint32_t dino_random(dino_game_t *game) {
     uint32_t value = game->random_state;
 
@@ -46,8 +65,7 @@ static uint32_t dino_random(dino_game_t *game) {
 static int16_t dino_speed_q4(const dino_game_t *game) {
     uint32_t speed = DINO_INITIAL_SPEED_Q4 + game->score / DINO_SCORE_STEP;
 
-    return (int16_t)((speed > DINO_MAX_SPEED_Q4) ?
-                     DINO_MAX_SPEED_Q4 : speed);
+    return (int16_t)((speed > DINO_MAX_SPEED_Q4) ? DINO_MAX_SPEED_Q4 : speed);
 }
 
 static void dino_reset_round(dino_game_t *game, dino_state_t state) {
@@ -71,25 +89,27 @@ static bool dino_is_grounded(const dino_game_t *game) {
 
 static uint8_t dino_obstacle_width(uint8_t type) {
     switch (type) {
-    case DINO_OBSTACLE_CACTUS_SMALL_BIG:
-    case DINO_OBSTACLE_CACTUS_BIG_SMALL:
-        return 14u;
-    case DINO_OBSTACLE_CACTUS_BIG_BIG:
-        return 18u;
-    case DINO_OBSTACLE_CACTUS_THREE_SMALL:
-        return 18u;
-    default: return 12u;
+        case DINO_OBSTACLE_CACTUS_SMALL_BIG:
+        case DINO_OBSTACLE_CACTUS_BIG_SMALL:
+            return 14u;
+        case DINO_OBSTACLE_CACTUS_BIG_BIG:
+            return 18u;
+        case DINO_OBSTACLE_CACTUS_THREE_SMALL:
+            return 18u;
+        default:
+            return 12u;
     }
 }
 
 static uint8_t dino_obstacle_height(uint8_t type) {
     switch (type) {
-    case DINO_OBSTACLE_CACTUS_SMALL_BIG:
-    case DINO_OBSTACLE_CACTUS_BIG_SMALL:
-    case DINO_OBSTACLE_CACTUS_BIG_BIG:
-    case DINO_OBSTACLE_CACTUS_THREE_SMALL:
-        return 18u;
-    default: return 10u;
+        case DINO_OBSTACLE_CACTUS_SMALL_BIG:
+        case DINO_OBSTACLE_CACTUS_BIG_SMALL:
+        case DINO_OBSTACLE_CACTUS_BIG_BIG:
+        case DINO_OBSTACLE_CACTUS_THREE_SMALL:
+            return 18u;
+        default:
+            return 10u;
     }
 }
 
@@ -97,20 +117,17 @@ static int16_t dino_obstacle_y(uint8_t type) {
     if (type == DINO_OBSTACLE_BIRD) {
         return 30;
     }
-    return (int16_t)(DINO_GROUND_Y - dino_obstacle_height(type) +
-                     DINO_CACTUS_SINK_PIXELS);
+    return (int16_t)(DINO_GROUND_Y - dino_obstacle_height(type) + DINO_CACTUS_SINK_PIXELS);
 }
 
-static bool dino_rectangles_overlap(int16_t left_a, int16_t top_a,
-                                    int16_t width_a, int16_t height_a,
-                                    int16_t left_b, int16_t top_b,
+static bool dino_rectangles_overlap(int16_t left_a, int16_t top_a, int16_t width_a,
+                                    int16_t height_a, int16_t left_b, int16_t top_b,
                                     int16_t width_b, int16_t height_b) {
     return (left_a < left_b + width_b) && (left_a + width_a > left_b) &&
            (top_a < top_b + height_b) && (top_a + height_a > top_b);
 }
 
-static bool dino_hits_obstacle(const dino_game_t *game,
-                               const dino_obstacle_t *obstacle) {
+static bool dino_hits_obstacle(const dino_game_t *game, const dino_obstacle_t *obstacle) {
     int16_t player_y = game->player_y_q4 / 16;
     int16_t obstacle_x = obstacle->x_q4 / 16;
     int16_t obstacle_y = dino_obstacle_y(obstacle->type);
@@ -131,14 +148,12 @@ static bool dino_hits_obstacle(const dino_game_t *game,
     }
 
     if (obstacle->type == DINO_OBSTACLE_BIRD) {
-        return dino_rectangles_overlap(
-            player_x, player_y, player_width, player_height,
-            obstacle_x + 1, obstacle_y + 2, 10, 6);
+        return dino_rectangles_overlap(player_x, player_y, player_width, player_height,
+                                       obstacle_x + 1, obstacle_y + 2, 10, 6);
     }
-    return dino_rectangles_overlap(
-        player_x, player_y, player_width, player_height,
-        obstacle_x + (dino_obstacle_width(obstacle->type) / 2) - 3,
-        obstacle_y + 5, 6, 20);
+    return dino_rectangles_overlap(player_x, player_y, player_width, player_height,
+                                   obstacle_x + (dino_obstacle_width(obstacle->type) / 2) - 3,
+                                   obstacle_y + 5, 6, 20);
 }
 
 static void dino_spawn_obstacle(dino_game_t *game) {
@@ -153,21 +168,18 @@ static void dino_spawn_obstacle(dino_game_t *game) {
         if ((type == DINO_OBSTACLE_BIRD) && (game->score < 150u)) {
             type = (uint8_t)(dino_random(game) % 2u);
         }
-        if ((type == DINO_OBSTACLE_CACTUS_BIG_BIG) &&
-            (game->score < 100u)) {
+        if ((type == DINO_OBSTACLE_CACTUS_BIG_BIG) && (game->score < 100u)) {
             type = DINO_OBSTACLE_CACTUS_SMALL_BIG;
         }
-        if ((type == DINO_OBSTACLE_CACTUS_THREE_SMALL) &&
-            (game->score < 225u)) {
+        if ((type == DINO_OBSTACLE_CACTUS_THREE_SMALL) && (game->score < 225u)) {
             type = DINO_OBSTACLE_CACTUS_BIG_SMALL;
         }
-        obstacle->x_q4 = (int16_t)(GAME_DISPLAY_WIDTH * 16);
+        obstacle->x_q4 = (int16_t)(GFX_WIDTH * 16);
         obstacle->type = type;
         obstacle->active = true;
-        game->spawn_remaining_q4 = (int16_t)(
-            (DINO_MIN_SPAWN_GAP_PIXELS +
-             dino_random(game) % DINO_SPAWN_VARIANCE_PIXELS) *
-            16u);
+        game->spawn_remaining_q4 =
+            (int16_t)((DINO_MIN_SPAWN_GAP_PIXELS + dino_random(game) % DINO_SPAWN_VARIANCE_PIXELS) *
+                      16u);
         return;
     }
 }
@@ -178,25 +190,21 @@ static void dino_update_clouds(dino_game_t *game, int16_t speed_q4) {
 
         cloud->x_q4 -= (int16_t)(speed_q4 / cloud->speed_divisor);
         if (cloud->x_q4 < -(int16_t)(20 * 16)) {
-            cloud->x_q4 = (int16_t)(
-                (GAME_DISPLAY_WIDTH + 16u + dino_random(game) % 32u) * 16u);
+            cloud->x_q4 = (int16_t)((GFX_WIDTH + 16u + dino_random(game) % 32u) * 16u);
             cloud->y = (uint8_t)(12u + dino_random(game) % 17u);
         }
     }
 }
 
-static void dino_update_running(dino_game_t *game, uint8_t input_state,
-                                uint8_t pressed) {
+static void dino_update_running(dino_game_t *game, uint8_t input_state, uint8_t pressed) {
     int16_t speed_q4 = dino_speed_q4(game);
 
     if (((pressed & GAME_INPUT_MODE) != 0u) && dino_is_grounded(game)) {
         game->player_velocity_q4 = DINO_JUMP_VELOCITY_Q4;
         game->ducking = false;
     }
-    game->ducking = ((input_state & GAME_INPUT_DOWN) != 0u) &&
-                    dino_is_grounded(game);
-    if (!dino_is_grounded(game) ||
-        (game->player_velocity_q4 < 0)) {
+    game->ducking = ((input_state & GAME_INPUT_DOWN) != 0u) && dino_is_grounded(game);
+    if (!dino_is_grounded(game) || (game->player_velocity_q4 < 0)) {
         if ((input_state & GAME_INPUT_DOWN) != 0u) {
             game->player_velocity_q4 += DINO_GRAVITY_Q4;
         }
@@ -208,9 +216,8 @@ static void dino_update_running(dino_game_t *game, uint8_t input_state,
         }
     }
 
-    game->ground_phase_q4 = (uint16_t)(
-        (game->ground_phase_q4 + speed_q4) %
-        (DINO_GROUND_TILE_WIDTH * DINO_GROUND_TILE_COUNT * 16u));
+    game->ground_phase_q4 = (uint16_t)((game->ground_phase_q4 + speed_q4) %
+                                       (DINO_GROUND_TILE_WIDTH * DINO_GROUND_TILE_COUNT * 16u));
     game->animation_frame++;
     dino_update_clouds(game, speed_q4);
 
@@ -225,8 +232,7 @@ static void dino_update_running(dino_game_t *game, uint8_t input_state,
             continue;
         }
         obstacle->x_q4 -= speed_q4;
-        if (obstacle->x_q4 <
-            -(int16_t)(dino_obstacle_width(obstacle->type) * 16u)) {
+        if (obstacle->x_q4 < -(int16_t)(dino_obstacle_width(obstacle->type) * 16u)) {
             obstacle->active = false;
             continue;
         }
@@ -247,6 +253,9 @@ static void dino_update_running(dino_game_t *game, uint8_t input_state,
     }
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void dino_game_init(void *context, uint32_t seed) {
     dino_game_t *game = (dino_game_t *)context;
 
@@ -265,8 +274,7 @@ void dino_game_deinit(void *context) {
     (void)context;
 }
 
-void dino_game_update(void *context, uint8_t input_state,
-                      uint32_t elapsed_ms) {
+void dino_game_update(void *context, uint8_t input_state, uint32_t elapsed_ms) {
     dino_game_t *game = (dino_game_t *)context;
     uint8_t pressed;
 
@@ -307,6 +315,9 @@ void dino_game_update(void *context, uint8_t input_state,
     }
 }
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static void dino_score_digits(char *destination, uint32_t value) {
     value %= 100000u;
     for (int8_t index = 4; index >= 0; index--) {
@@ -320,30 +331,27 @@ static void dino_draw_score(const dino_game_t *game) {
 
     dino_score_digits(&text[3], game->high_score);
     dino_score_digits(&text[9], game->score);
-    game_gfx_draw_text(DINO_SCORE_X, DINO_SCORE_Y, text, 1u, true, false);
+    gfx_draw_text(DINO_SCORE_X, DINO_SCORE_Y, text, 1u, true, false);
 }
 
-static void dino_draw_bitmap_clipped(int16_t x, int16_t y,
-                                     const uint8_t *bitmap,
-                                     uint8_t width, uint8_t height) {
+static void dino_draw_bitmap_clipped(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t width,
+                                     uint8_t height) {
     for (uint8_t row = 0u; row < height; row++) {
         int16_t screen_y = y + row;
 
-        if ((screen_y < 0) || (screen_y >= (int16_t)GAME_DISPLAY_HEIGHT)) {
+        if ((screen_y < 0) || (screen_y >= (int16_t)GFX_HEIGHT)) {
             continue;
         }
         for (uint8_t column = 0u; column < width; column++) {
             int16_t screen_x = x + column;
             uint8_t data;
 
-            if ((screen_x < 0) ||
-                (screen_x >= (int16_t)GAME_DISPLAY_WIDTH)) {
+            if ((screen_x < 0) || (screen_x >= (int16_t)GFX_WIDTH)) {
                 continue;
             }
             data = bitmap[(uint32_t)(row / 8u) * width + column];
             if ((data & (1u << (row & 7u))) != 0u) {
-                game_display_draw_pixel((uint8_t)screen_x,
-                                        (uint8_t)screen_y, true);
+                gfx_draw_pixel((uint8_t)screen_x, (uint8_t)screen_y, true);
             }
         }
     }
@@ -351,8 +359,7 @@ static void dino_draw_bitmap_clipped(int16_t x, int16_t y,
 
 static const uint8_t *dino_ground_tile(uint8_t index) {
     static const uint8_t *const tiles[DINO_GROUND_TILE_COUNT] = {
-        dino_ground_1, dino_ground_2, dino_ground_3,
-        dino_ground_4, dino_ground_5,
+        dino_ground_1, dino_ground_2, dino_ground_3, dino_ground_4, dino_ground_5,
     };
 
     return tiles[index % DINO_GROUND_TILE_COUNT];
@@ -360,16 +367,13 @@ static const uint8_t *dino_ground_tile(uint8_t index) {
 
 static void dino_draw_ground(const dino_game_t *game) {
     uint16_t phase = game->ground_phase_q4 / 16u;
-    uint8_t tile_index =
-        (uint8_t)((phase / DINO_GROUND_TILE_WIDTH) %
-                  DINO_GROUND_TILE_COUNT);
+    uint8_t tile_index = (uint8_t)((phase / DINO_GROUND_TILE_WIDTH) % DINO_GROUND_TILE_COUNT);
     int16_t x = -(int16_t)(phase % DINO_GROUND_TILE_WIDTH);
 
     for (uint8_t visible = 0u; visible < 3u; visible++) {
-        dino_draw_bitmap_clipped(
-            x, DINO_GROUND_BITMAP_Y,
-            dino_ground_tile((uint8_t)(tile_index + visible)),
-            DINO_GROUND_TILE_WIDTH, 12u);
+        dino_draw_bitmap_clipped(x, DINO_GROUND_BITMAP_Y,
+                                 dino_ground_tile((uint8_t)(tile_index + visible)),
+                                 DINO_GROUND_TILE_WIDTH, 12u);
         x += DINO_GROUND_TILE_WIDTH;
     }
 }
@@ -381,33 +385,35 @@ static void dino_draw_obstacle(const dino_obstacle_t *obstacle) {
     uint8_t width;
     uint8_t height;
 
-    if (!obstacle->active || (x >= (int16_t)GAME_DISPLAY_WIDTH)) {
+    if (!obstacle->active || (x >= (int16_t)GFX_WIDTH)) {
         return;
     }
     y = dino_obstacle_y(obstacle->type);
     switch (obstacle->type) {
-    case DINO_OBSTACLE_CACTUS_SMALL_BIG:
-        bitmap = dino_cactus_small_big;
-        break;
-    case DINO_OBSTACLE_CACTUS_BIG_SMALL:
-        bitmap = dino_cactus_big_small;
-        break;
-    case DINO_OBSTACLE_CACTUS_BIG_BIG:
-        bitmap = dino_cactus_big_big;
-        break;
-    case DINO_OBSTACLE_CACTUS_THREE_SMALL:
-        bitmap = dino_cactus_three_small;
-        break;
-    default:
-        bitmap = (((obstacle->x_q4 / 16) & 4) != 0) ?
-                 dino_bird_1 : dino_bird_2;
-        break;
+        case DINO_OBSTACLE_CACTUS_SMALL_BIG:
+            bitmap = dino_cactus_small_big;
+            break;
+        case DINO_OBSTACLE_CACTUS_BIG_SMALL:
+            bitmap = dino_cactus_big_small;
+            break;
+        case DINO_OBSTACLE_CACTUS_BIG_BIG:
+            bitmap = dino_cactus_big_big;
+            break;
+        case DINO_OBSTACLE_CACTUS_THREE_SMALL:
+            bitmap = dino_cactus_three_small;
+            break;
+        default:
+            bitmap = (((obstacle->x_q4 / 16) & 4) != 0) ? dino_bird_1 : dino_bird_2;
+            break;
     }
     width = dino_obstacle_width(obstacle->type);
     height = dino_obstacle_height(obstacle->type);
     dino_draw_bitmap_clipped(x, y, bitmap, width, height);
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void dino_game_draw(const void *context) {
     const dino_game_t *game = (const dino_game_t *)context;
     int16_t player_y;
@@ -415,14 +421,13 @@ void dino_game_draw(const void *context) {
     if (game == NULL) {
         return;
     }
-    game_display_clear();
+    gfx_clear();
 
     for (uint8_t index = 0u; index < DINO_CLOUD_COUNT; index++) {
         int16_t cloud_x = game->clouds[index].x_q4 / 16;
 
         if ((cloud_x >= 0) && (cloud_x <= 108)) {
-            game_display_draw_bitmap((uint8_t)cloud_x, game->clouds[index].y,
-                                     dino_cloud, 20u, 6u, true);
+            gfx_draw_bitmap((uint8_t)cloud_x, game->clouds[index].y, dino_cloud, 20u, 6u, true);
         }
     }
     dino_draw_score(game);
@@ -434,8 +439,8 @@ void dino_game_draw(const void *context) {
 
     player_y = game->player_y_q4 / 16;
     if (game->ducking && dino_is_grounded(game)) {
-        dino_draw_bitmap_clipped(DINO_PLAYER_X, DINO_DUCK_Y, dino_duck,
-                                 DINO_DUCK_WIDTH, DINO_DUCK_HEIGHT);
+        dino_draw_bitmap_clipped(DINO_PLAYER_X, DINO_DUCK_Y, dino_duck, DINO_DUCK_WIDTH,
+                                 DINO_DUCK_HEIGHT);
     } else {
         const uint8_t *sprite;
 
@@ -444,20 +449,19 @@ void dino_game_draw(const void *context) {
         } else if (game->state == DINO_STATE_READY) {
             sprite = dino_stand;
         } else {
-            sprite = (((game->animation_frame / 6u) & 1u) != 0u) ?
-                     dino_run_2 : dino_run_1;
+            sprite = (((game->animation_frame / 6u) & 1u) != 0u) ? dino_run_2 : dino_run_1;
         }
 
-        dino_draw_bitmap_clipped(DINO_PLAYER_X, player_y, sprite,
-                                 DINO_STAND_WIDTH, DINO_STAND_HEIGHT);
+        dino_draw_bitmap_clipped(DINO_PLAYER_X, player_y, sprite, DINO_STAND_WIDTH,
+                                 DINO_STAND_HEIGHT);
     }
 
     if (game->state == DINO_STATE_READY) {
-        game_gfx_draw_text(37u, 25u, "MODE START", 1u, true, false);
+        gfx_draw_text(37u, 25u, "MODE START", 1u, true, false);
     } else if (game->state == DINO_STATE_GAME_OVER) {
-        game_display_fill_rect(33u, 18u, 62u, 31u, false);
-        game_gfx_draw_text(37u, 20u, "GAME OVER", 1u, true, false);
-        game_gfx_draw_text(40u, 31u, "UP RETRY", 1u, true, false);
-        game_gfx_draw_text(37u, 41u, "MODE MENU", 1u, true, false);
+        gfx_fill_rect(33u, 18u, 62u, 31u, false);
+        gfx_draw_text(37u, 20u, "GAME OVER", 1u, true, false);
+        gfx_draw_text(40u, 31u, "UP RETRY", 1u, true, false);
+        gfx_draw_text(37u, 41u, "MODE MENU", 1u, true, false);
     }
 }

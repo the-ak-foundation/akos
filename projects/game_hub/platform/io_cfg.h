@@ -1,11 +1,31 @@
+/**
+ ******************************************************************************
+ * @file    io_cfg.h
+ * @brief   Io cfg module
+ *
+ * @module  Game Hub - Platform
+ ******************************************************************************
+ */
+
 #ifndef __GAME_IO_CFG_H__
 #define __GAME_IO_CFG_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdint.h>
 
 #include "stm32l1xx.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Buttons, active low. */
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
 #define BUTTON_DOWN_IO_PIN   (3u)
 #define BUTTON_DOWN_IO_PORT  (GPIOB)
 #define BUTTON_DOWN_IO_CLOCK (RCC_AHBENR_GPIOBEN)
@@ -17,13 +37,15 @@
 #define BUTTON_MODE_IO_CLOCK (RCC_AHBENR_GPIOBEN)
 
 /* Life LED. The two game status LEDs are PA2 and PA3. */
-#define LED_LIFE_IO_PIN      (8u)
-#define LED_LIFE_IO_PORT     (GPIOB)
-#define LED_LIFE_IO_CLOCK    (RCC_AHBENR_GPIOBEN)
-#define LED_STATUS_1_IO_PIN  (2u)
-#define LED_STATUS_1_IO_PORT (GPIOA)
-#define LED_STATUS_2_IO_PIN  (3u)
-#define LED_STATUS_2_IO_PORT (GPIOA)
+#define LED_LIFE_IO_PIN       (8u)
+#define LED_LIFE_IO_PORT      (GPIOB)
+#define LED_LIFE_IO_CLOCK     (RCC_AHBENR_GPIOBEN)
+#define LED_STATUS_1_IO_PIN   (2u)
+#define LED_STATUS_1_IO_PORT  (GPIOA)
+#define LED_STATUS_1_IO_CLOCK (RCC_AHBENR_GPIOAEN)
+#define LED_STATUS_2_IO_PIN   (3u)
+#define LED_STATUS_2_IO_PORT  (GPIOA)
+#define LED_STATUS_2_IO_CLOCK (RCC_AHBENR_GPIOAEN)
 
 /* Buzzer: TIM3 channel 3 on PB0, alternate function 2. */
 #define BUZZER_IO_PIN    (0u)
@@ -61,47 +83,18 @@
 #define OLED_RES_IO_CLOCK  (RCC_AHBENR_GPIOAEN)
 
 /* USART1 console: TX PA9, RX PA10, alternate function 7. */
-#define UART1_TX_IO_PIN   (9u)
-#define UART1_RX_IO_PIN   (10u)
-#define UART1_IO_PORT     (GPIOA)
-#define UART1_IO_CLOCK    (RCC_AHBENR_GPIOAEN)
-#define UART1_CLOCK       (RCC_APB2ENR_USART1EN)
-#define UART1_AF          (7u)
+#define UART1_TX_IO_PIN (9u)
+#define UART1_RX_IO_PIN (10u)
+#define UART1_IO_PORT   (GPIOA)
+#define UART1_IO_CLOCK  (RCC_AHBENR_GPIOAEN)
+#define UART1_CLOCK     (RCC_APB2ENR_USART1EN)
+#define UART1_AF        (7u)
 
 #define EEPROM_BASE_ADDRESS (0x08080000u)
 #define EEPROM_MAX_SIZE     (0x1000u)
 
-void timer_delay_init(void);
-void delay(uint32_t milliseconds);
-
-void io_button_mode_init(void);
-void io_button_up_init(void);
-void io_button_down_init(void);
-uint8_t io_button_mode_read(void);
-uint8_t io_button_up_read(void);
-uint8_t io_button_down_read(void);
-
-void led_life_init(void);
-void led_life_on(void);
-void led_life_off(void);
-void led_life_toggle(void);
-
-void oled_clk_input_mode(void);
-void oled_clk_output_mode(void);
-void oled_clk_digital_write_low(void);
-void oled_clk_digital_write_high(void);
-int oled_clk_digital_read(void);
-
-void oled_data_input_mode(void);
-void oled_data_output_mode(void);
-void oled_data_digital_write_low(void);
-void oled_data_digital_write_high(void);
-int oled_data_digital_read(void);
-
-void oled_res_input_mode(void);
-void oled_res_output_mode(void);
-void oled_res_digital_write_low(void);
-void oled_res_digital_write_high(void);
-int oled_res_digital_read(void);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __GAME_IO_CFG_H__ */

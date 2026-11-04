@@ -18,12 +18,12 @@ VPATH += platform $(DEVICE_ROOT)/src
 SOURCES += \
 	platform/boot_shared.c \
 	platform/bsp.c \
-	platform/game_hal.c \
-	platform/io_cfg.c \
 	platform/system.c \
 	$(DEVICE_ROOT)/src/startup_stm32l151xb.s \
 	$(DEVICE_ROOT)/src/system_stm32l1xx.c
 
-SOURCES_CPP += platform/game_gfx.cpp
-
 LINKER_SCRIPT := $(PLATFORM_ROOT)/linker.ld
+
+include ./platform/oled/oled.mk
+include ./platform/uart/uart.mk
+include ./platform/buzzer/buzzer.mk

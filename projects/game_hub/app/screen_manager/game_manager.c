@@ -1,18 +1,32 @@
+/**
+ ******************************************************************************
+ * @file    game_manager.c
+ * @brief   Game manager module
+ *
+ * @module  Game Hub - Screen Manager
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include "game_manager.h"
 
 #include <string.h>
 
-#include "app.h"
+#include "game_input.h"
 #include "game_menu.h"
 
+/*==================================================================================================
+*                                        PRIVATE FUNCTIONS
+==================================================================================================*/
 static bool game_manager_select_auto_snake(game_manager_t *manager) {
     size_t count = game_registry_count();
 
     for (size_t index = 0u; index < count; index++) {
         const game_entry_t *entry = game_registry_get(index);
 
-        if ((entry != NULL) &&
-            (strcmp(entry->name, "AUTO SNAKE") == 0)) {
+        if ((entry != NULL) && (strcmp(entry->name, "AUTO SNAKE") == 0)) {
             manager->selected_index = (uint8_t)index;
             return true;
         }
@@ -35,20 +49,22 @@ static void game_manager_start_selected(game_manager_t *manager) {
     entry->init(manager->context.bytes, manager->uptime_ms);
 }
 
-static void game_manager_move_selection(game_manager_t *manager,
-                                        int8_t direction, size_t count) {
+static void game_manager_move_selection(game_manager_t *manager, int8_t direction, size_t count) {
     if ((manager == NULL) || (count == 0u)) {
         return;
     }
     if (direction < 0) {
-        manager->selected_index = (manager->selected_index == 0u) ?
-            (uint8_t)(count - 1u) : (uint8_t)(manager->selected_index - 1u);
+        manager->selected_index = (manager->selected_index == 0u)
+                                      ? (uint8_t)(count - 1u)
+                                      : (uint8_t)(manager->selected_index - 1u);
     } else {
-        manager->selected_index =
-            (uint8_t)((manager->selected_index + 1u) % count);
+        manager->selected_index = (uint8_t)((manager->selected_index + 1u) % count);
     }
 }
 
+/*==================================================================================================
+*                                         GLOBAL FUNCTIONS
+==================================================================================================*/
 void game_manager_init(game_manager_t *manager) {
     if (manager == NULL) {
         return;
@@ -58,8 +74,7 @@ void game_manager_init(game_manager_t *manager) {
     manager->mode = GAME_MANAGER_MENU;
 }
 
-void game_manager_update(game_manager_t *manager, uint8_t input_state,
-                         uint32_t elapsed_ms) {
+void game_manager_update(game_manager_t *manager, uint8_t input_state, uint32_t elapsed_ms) {
     uint8_t pressed;
     uint8_t navigation;
 
@@ -98,22 +113,18 @@ void game_manager_update(game_manager_t *manager, uint8_t input_state,
             }
         }
         navigation = input_state & (GAME_INPUT_UP | GAME_INPUT_DOWN);
-        if ((navigation == GAME_INPUT_UP) ||
-            (navigation == GAME_INPUT_DOWN)) {
+        if ((navigation == GAME_INPUT_UP) || (navigation == GAME_INPUT_DOWN)) {
             bool repeat = false;
 
             if (manager->navigation_hold_updates < UINT8_MAX) {
                 manager->navigation_hold_updates++;
             }
-            if (manager->navigation_hold_updates >=
-                GAME_MANAGER_REPEAT_DELAY_UPDATES) {
-                repeat = ((manager->navigation_hold_updates -
-                           GAME_MANAGER_REPEAT_DELAY_UPDATES) %
+            if (manager->navigation_hold_updates >= GAME_MANAGER_REPEAT_DELAY_UPDATES) {
+                repeat = ((manager->navigation_hold_updates - GAME_MANAGER_REPEAT_DELAY_UPDATES) %
                           GAME_MANAGER_REPEAT_PERIOD_UPDATES) == 0u;
             }
             if (((pressed & navigation) != 0u) || repeat) {
-                game_manager_move_selection(
-                    manager, navigation == GAME_INPUT_UP ? -1 : 1, count);
+                game_manager_move_selection(manager, navigation == GAME_INPUT_UP ? -1 : 1, count);
             }
         } else {
             manager->navigation_hold_updates = 0u;
@@ -125,8 +136,7 @@ void game_manager_update(game_manager_t *manager, uint8_t input_state,
     }
 
     if (manager->active_game != NULL) {
-        manager->active_game->update(manager->context.bytes, input_state,
-                                     elapsed_ms);
+        manager->active_game->update(manager->context.bytes, input_state, elapsed_ms);
         if ((manager->active_game->wants_menu != NULL) &&
             manager->active_game->wants_menu(manager->context.bytes)) {
             if (manager->active_game->deinit != NULL) {
@@ -155,8 +165,7 @@ void game_manager_draw(const game_manager_t *manager) {
 
 uint8_t game_manager_take_events(game_manager_t *manager) {
     if ((manager == NULL) || (manager->mode != GAME_MANAGER_RUNNING) ||
-        (manager->active_game == NULL) ||
-        (manager->active_game->take_events == NULL)) {
+        (manager->active_game == NULL) || (manager->active_game->take_events == NULL)) {
         return 0u;
     }
     return manager->active_game->take_events(manager->context.bytes);

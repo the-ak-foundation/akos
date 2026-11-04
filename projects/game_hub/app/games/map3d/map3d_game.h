@@ -1,12 +1,36 @@
+/**
+ ******************************************************************************
+ * @file    map3d_game.h
+ * @brief   Map3d game module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
 #ifndef __MAP3D_GAME_H__
 #define __MAP3D_GAME_H__
 
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAP3D_WIDTH       (16u)
-#define MAP3D_HEIGHT      (16u)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+*                                        DEFINES AND MACROS
+==================================================================================================*/
+
+#define MAP3D_WIDTH        (16u)
+#define MAP3D_HEIGHT       (16u)
 #define MAP3D_STORAGE_SIZE ((MAP3D_WIDTH * MAP3D_HEIGHT) / 8u)
+
+/*==================================================================================================
+*                                  STRUCTURES AND OTHER TYPEDEFS
+==================================================================================================*/
 
 typedef struct {
     uint8_t map[MAP3D_STORAGE_SIZE];
@@ -24,10 +48,16 @@ typedef struct {
     bool map_hold_latched;
 } map3d_game_t;
 
+/*==================================================================================================
+*                                       FUNCTION PROTOTYPES
+==================================================================================================*/
 void map3d_game_init(void *context, uint32_t seed);
 void map3d_game_deinit(void *context);
-void map3d_game_update(void *context, uint8_t input_state,
-                       uint32_t elapsed_ms);
+void map3d_game_update(void *context, uint8_t input_state, uint32_t elapsed_ms);
 void map3d_game_draw(const void *context);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MAP3D_GAME_H__ */
