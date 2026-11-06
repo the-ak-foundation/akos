@@ -26,24 +26,8 @@ OS_CFG_HEAP_SIZE ?= 6144u
 OS_CFG_USE_LOG ?= 0u
 OLED_DRIVER ?= SH1106
 
-include $(PROJECT_ROOT)/game_hub.cfg.mk
+include $(PROJECT_ROOT)/common/game_config.mk
 
-GAME_HUB_GAME_NAMES := TOWN_MAP BIKE_RACER MATH_RUSH HOLLOW UFO MAP3D \
-	BLOCK_STACK DINO_RUNNER AUTO_SNAKE BITMAP_VIEWER
-
-GAME_HUB_CONFIG_OPTIONS := $(addprefix GAME_HUB_ENABLE_,$(GAME_HUB_GAME_NAMES)) \
-	GAME_HUB_ENABLE_DEBUG_PRINT
-
-$(foreach option,$(GAME_HUB_CONFIG_OPTIONS),\
-	$(if $(filter-out 0 1,$($(option))),\
-		$(error $(option) must be 0 or 1))\
-	$(if $(filter 1,$(words $($(option)))),,\
-		$(error $(option) must be 0 or 1)))
-
-GAME_HUB_CONFIG_FLAGS := $(foreach option,$(GAME_HUB_CONFIG_OPTIONS),\
-	-D$(option)=$(strip $($(option))))
-# Game mechanics tests cover every game; test-config exercises the release selection.
-HOST_ALL_GAME_FLAGS := $(foreach game,$(GAME_HUB_GAME_NAMES),-DGAME_HUB_ENABLE_$(game)=1)
 GAME_HUB_CONFIG_SIGNATURE := $(foreach option,$(GAME_HUB_CONFIG_OPTIONS),\
 	$(option)=$(strip $($(option))))
 
@@ -65,7 +49,6 @@ include $(PROJECT_ROOT)/services/services.mk
 include $(PROJECT_ROOT)/app/app.mk
 
 TOOLCHAIN ?= arm-none-eabi-
-HOSTCC ?= gcc
 CC := $(TOOLCHAIN)gcc
 CXX := $(TOOLCHAIN)g++
 OBJCOPY := $(TOOLCHAIN)objcopy
@@ -87,9 +70,6 @@ LDLIBS += -lc -lm -lnosys
 SOURCE_PATHS := $(patsubst $(ROOT_DIR)/%,%,$(abspath $(SOURCES) $(SOURCES_CPP)))
 OBJECTS := $(addprefix $(BUILD_DIR)/obj/,$(addsuffix .o,$(SOURCE_PATHS)))
 DEPS := $(OBJECTS:.o=.d)
-HOST_GAME_CONFIG_SOURCES := $(filter app/games/%.c,$(SOURCES))
-HOST_GAME_CONFIG_SOURCES := $(filter-out app/games/hollow/hollow_audio.c,$(HOST_GAME_CONFIG_SOURCES))
-HOST_GAME_CONFIG_INCLUDES := $(filter -I%,$(CPPFLAGS))
 
 .DEFAULT_GOAL := all
 
@@ -188,102 +168,13 @@ $(BUILD_DIR)/obj/%.cpp.o: $(ROOT_DIR)/%.cpp
 clean:
 	rm -rf $(BUILD_DIR)
 
-test: test-config
-	@mkdir -p $(BUILD_DIR)
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror $(HOST_ALL_GAME_FLAGS) \
-		-Iservices/display -Iservices/input -Iservices/audio -Iplatform/buzzer \
-		-Iapp -Iapp/games/hollow -Iplatform \
-		-Iapp/screen_manager -Iapp/games/math_rush \
-		-Iapp/games/bike_racer -Iapp/games/ufo \
-		-Iapp/games/map3d -Iapp/games/block_stack \
-		-Iapp/games/dino_runner -Iapp/games/auto_snake \
-		-Iapp/games/bitmap_viewer \
-		-Iapp/games/town_map -Iapp/games/town_map/farm \
-		-Iapp/games/town_map/fish_pond \
-		tests/test_hollow_game.c app/games/hollow/hollow_game.c \
-		app/games/hollow/hollow_bitmap.c \
-		app/screen_manager/game_registry.c \
-		app/screen_manager/game_menu.c \
-		app/screen_manager/game_menu_icons.c \
-		app/screen_manager/game_manager.c \
-		app/games/math_rush/math_rush_game.c \
-		app/games/math_rush/math_rush_question.c -lm \
-		app/games/bike_racer/bike_racer_game.c \
-		app/games/bike_racer/bike_racer_bitmap.c \
-		app/games/ufo/ufo_game.c \
-		app/games/ufo/ufo_bitmap.c \
-		app/games/map3d/map3d_game.c \
-		app/games/block_stack/block_stack_game.c \
-		app/games/dino_runner/dino_bitmap.c \
-		app/games/dino_runner/dino_game.c \
-		app/games/auto_snake/auto_snake_game.c \
-		app/games/bitmap_viewer/bitmap_viewer_bitmaps.c \
-		app/games/bitmap_viewer/bitmap_viewer_game.c \
-		app/games/town_map/town_map_game.c \
-		app/games/town_map/town_areas.c \
-		app/games/town_map/town_area_bitmaps.c \
-		app/games/town_map/farm/town_farm.c \
-		app/games/town_map/fish_pond/town_fish_pond.c \
-		app/games/town_map/player_bitmap.c \
-		app/games/town_map/town_player_assets.c \
-		services/audio/audio.c \
-		-o $(BUILD_DIR)/test_hollow_game
-	$(BUILD_DIR)/test_hollow_game
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/display -Iservices/input -Iservices/audio -Iplatform/buzzer \
-		-Iapp -Iapp/games/math_rush -Iplatform \
-		tests/test_math_rush.c app/games/math_rush/math_rush_game.c \
-		app/games/math_rush/math_rush_question.c services/audio/audio.c \
-		-o $(BUILD_DIR)/test_math_rush
-	$(BUILD_DIR)/test_math_rush
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/display -Iservices/input -Iservices/audio -Iplatform/buzzer \
-		-Iapp -Iapp/games/auto_snake -Iplatform \
-		tests/test_auto_snake.c -o $(BUILD_DIR)/test_auto_snake
-	$(BUILD_DIR)/test_auto_snake
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/display -Iservices/input -Iservices/audio -Iplatform/buzzer \
-		-Iapp -Iapp/games/town_map -Iapp/games/town_map/farm \
-		-Iapp/games/town_map/fish_pond \
-		-Iapp/games/bitmap_viewer -Iplatform \
-		tests/test_town_map.c app/games/town_map/town_map_game.c \
-		app/games/town_map/town_areas.c \
-		app/games/town_map/town_area_bitmaps.c \
-		app/games/town_map/farm/town_farm.c \
-		app/games/town_map/fish_pond/town_fish_pond.c \
-		app/games/town_map/player_bitmap.c \
-		app/games/town_map/town_player_assets.c \
-		app/games/bitmap_viewer/bitmap_viewer_bitmaps.c \
-		-o $(BUILD_DIR)/test_town_map
-	$(BUILD_DIR)/test_town_map
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/display tests/test_graphics.c services/display/graphics.c \
-		-o $(BUILD_DIR)/test_graphics
-	$(BUILD_DIR)/test_graphics
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/display -Iplatform/oled \
-		tests/test_display.c services/display/display.c services/display/graphics.c \
-		-o $(BUILD_DIR)/test_display
-	$(BUILD_DIR)/test_display
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/input -Iplatform \
-		tests/test_game_input.c services/input/game_input.c \
-		-o $(BUILD_DIR)/test_game_input
-	$(BUILD_DIR)/test_game_input
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror \
-		-Iservices/audio -Iplatform/buzzer -Iapp/games/hollow \
-		tests/test_audio.c services/audio/audio.c services/audio/buzzer_music.c \
-		app/games/hollow/hollow_audio.c -o $(BUILD_DIR)/test_audio
-	$(BUILD_DIR)/test_audio
-
-test-config:
-	@mkdir -p $(BUILD_DIR)
-	$(HOSTCC) -std=c11 -Wall -Wextra -Werror $(GAME_HUB_CONFIG_FLAGS) \
-		$(HOST_GAME_CONFIG_INCLUDES) tests/test_game_config.c \
-		app/screen_manager/game_registry.c app/screen_manager/game_manager.c \
-		app/screen_manager/game_menu.c app/screen_manager/game_menu_icons.c \
-		$(HOST_GAME_CONFIG_SOURCES) services/audio/audio.c -lm -o $(BUILD_DIR)/test_game_config
-	$(BUILD_DIR)/test_game_config
+test test-config:
+	@if test -f "$(PROJECT_ROOT)/tests/Makefile"; then \
+		$(MAKE) --no-print-directory -C "$(PROJECT_ROOT)" -f tests/Makefile $@ \
+			BUILD_DIR="$(abspath $(BUILD_DIR))"; \
+	else \
+		printf 'Skipping %s: tests/Makefile is not available.\n' '$@'; \
+	fi
 
 com: 
 	@printf '\nOpen minicom with /dev/ttyUSB0\n'

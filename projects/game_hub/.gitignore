@@ -1,5 +1,6 @@
 # Ignore everything
 /*
+/build
 
 # Allow specific directories
 !/app/
