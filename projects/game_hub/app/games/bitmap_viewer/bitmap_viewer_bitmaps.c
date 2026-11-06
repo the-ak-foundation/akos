@@ -1,0 +1,225 @@
+/**
+ ******************************************************************************
+ * @file    bitmap_viewer_bitmaps.c
+ * @brief   Bitmap viewer bitmaps module
+ *
+ * @module  Game Hub - Games
+ ******************************************************************************
+ */
+
+/*==================================================================================================
+*                                          INCLUDE FILES
+==================================================================================================*/
+#include "bitmap_viewer_bitmaps.h"
+
+/*==================================================================================================
+*                                         LOCAL VARIABLES
+==================================================================================================*/
+
+static const uint8_t ui_sparkle_bitmap[] = {
+    0x44,
+    0x28,
+    0xA8,
+};
+
+static const uint8_t ui_grass_tuft_bitmap[] = {
+    0x21, 0x00, 0x12, 0x00, 0x89, 0x20, 0x4A, 0x40, 0x2A, 0x80,
+};
+
+static const uint8_t fence_left_bitmap[] = {
+    0x00, 0x0E, 0x00, 0x0E, 0x31, 0x8E, 0x31, 0x8E, 0xFF,
+    0xFE, 0x31, 0x8E, 0x31, 0x8E, 0xFF, 0xFE, 0x31, 0x8E,
+};
+
+static const uint8_t fence_right_bitmap[] = {
+    0xE0, 0x00, 0xE0, 0x00, 0xE3, 0x18, 0xE3, 0x18, 0xFF,
+    0xFE, 0xE3, 0x18, 0xE3, 0x18, 0xFF, 0xFE, 0xE3, 0x18,
+};
+
+static const uint8_t ui_tiny_mark_bitmap[] = {
+    0x20,
+    0xA8,
+};
+
+static const uint8_t ui_effect_01_bitmap[] = {
+    0x12,
+    0xA4,
+};
+
+static const uint8_t ui_sun_bitmap[] = {
+    0x24, 0x00, 0x99, 0x24, 0x24, 0x99, 0x00, 0x24,
+};
+
+static const uint8_t ui_time_0130_bitmap[] = {
+    0x62, 0x1C, 0xC0, 0x96, 0x05, 0x20, 0x92, 0x45, 0x20, 0x92, 0x1D,
+    0x20, 0x92, 0x45, 0x20, 0x92, 0x05, 0x20, 0x67, 0x1C, 0xC0,
+};
+
+static const uint8_t ui_moon_bitmap[] = {
+    0x18, 0x30, 0x60, 0xE0, 0xE0, 0x60, 0x30, 0x18,
+};
+
+static const uint8_t tool_watering_can_bitmap[] = {
+    0x07, 0x00, 0x28, 0xB0, 0x6F, 0xD0, 0xFF, 0x90, 0x3F, 0x90, 0x1F, 0xE0, 0x0F, 0x80, 0x1F, 0xC0,
+};
+
+static const uint8_t tool_hoe_bitmap[] = {
+    0x01, 0x80, 0x03, 0x40, 0x07, 0xA0, 0x05, 0xD0, 0x0C, 0xF0,
+    0x18, 0x60, 0x30, 0x00, 0x60, 0x00, 0xC0, 0x00, 0xC0, 0x00,
+};
+
+static const uint8_t tool_seed_bag_bitmap[] = {
+    0x7F, 0x00, 0x3E, 0x00, 0x00, 0x00, 0x2A, 0x00, 0x7F, 0x00,
+    0xF7, 0x80, 0xDD, 0x80, 0xEB, 0x80, 0xF7, 0x80, 0x7F, 0x00,
+};
+
+static const uint8_t menu_four_tiles_bitmap[] = {
+    0xF0, 0x97, 0x95, 0xF7, 0x00, 0xF7, 0x95, 0x97, 0xF0,
+};
+
+static const uint8_t menu_grid_bitmap[] = {
+    0xF7, 0x80, 0x97, 0x80, 0x97, 0x80, 0xF7, 0x80, 0x00,
+    0x00, 0xF7, 0x80, 0xF7, 0x80, 0xF7, 0x80, 0xF7, 0x80,
+};
+
+static const uint8_t crop_sprout_bitmap[] = {
+    0xDB, 0x00, 0x00, 0x00, 0x6D, 0x80, 0x00, 0x00, 0xDB, 0x00, 0x00, 0x00, 0x6D, 0x80,
+};
+
+static const uint8_t crop_leaf_bitmap[] = {
+    0x63, 0x00, 0x94, 0x80, 0x00, 0x00, 0x63, 0x00, 0x94, 0x80, 0x00, 0x00, 0x63, 0x00, 0x94, 0x80,
+};
+
+static const uint8_t ui_marker_bitmap[] = {
+    0x70, 0x88, 0x88, 0xF8, 0xD8, 0xD8, 0xF8,
+};
+
+static const uint8_t crop_seedling_bitmap[] = {
+    0x44, 0xAA, 0x54, 0x10, 0x10, 0x38,
+};
+
+static const uint8_t crop_wheat_bitmap[] = {
+    0x08, 0x00, 0x08, 0x00, 0x36, 0x00, 0x1C, 0x00, 0x28, 0x00, 0x36, 0x00, 0x1C, 0x00, 0x2A,
+    0x00, 0x36, 0x00, 0x1C, 0x00, 0x41, 0x00, 0x2A, 0x00, 0x08, 0x00, 0x49, 0x00, 0xAA, 0x80,
+};
+
+static const uint8_t crop_pumpkin_bitmap[] = {
+    0x20, 0x00, 0x52, 0x00, 0x2C, 0x00, 0x08, 0x00, 0x3E, 0x00,
+    0x55, 0x00, 0xAA, 0x80, 0xAA, 0x80, 0x55, 0x00, 0x3E, 0x00,
+};
+
+static const uint8_t crop_tomato_bitmap[] = {
+    0x08, 0x00, 0x14, 0x00, 0x0B, 0x00, 0x13, 0x00, 0x28, 0x00, 0x68, 0x00, 0x6A, 0x00,
+    0x05, 0x80, 0x09, 0x80, 0x28, 0x00, 0xD0, 0x00, 0xC8, 0x00, 0x0C, 0x00, 0x29, 0x00,
+};
+
+static const uint8_t layout_frame_bottom_bitmap[] = {
+    0x3E,
+    0x7F,
+    0xFF,
+    0xDD,
+};
+
+static const uint8_t layout_toolbar_frame_bitmap[] = {
+    0x77, 0x77, 0x77, 0x77, 0x7B, 0xB7, 0xDB, 0xA0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x6E, 0xDE, 0xEF, 0xBE, 0xEE, 0xFD, 0xEF, 0xE0,
+};
+
+static const uint8_t layout_farm_divider_bitmap[] = {
+    0xA0,
+    0x40,
+    0x40,
+};
+
+static const uint8_t plot_top_1_bitmap[] = {
+    0xFF, 0xFE, 0x92, 0x4A, 0x80, 0x02, 0xC0, 0x06, 0x80, 0x02, 0x80, 0x02, 0xC0, 0x06, 0x80,
+    0x02, 0x80, 0x02, 0x80, 0x06, 0xC0, 0x02, 0x80, 0x02, 0x80, 0x06, 0xC9, 0x22, 0xFF, 0xFE,
+};
+
+#define BITMAP(width_value, height_value, data_value)                                              \
+    {width_value, height_value, (width_value + 7u) / 8u, data_value}
+
+const bitmap_viewer_entry_t bitmap_viewer_catalog[] = {
+    BITMAP(6u, 3u, ui_sparkle_bitmap),
+    BITMAP(11u, 5u, ui_grass_tuft_bitmap),
+    BITMAP(15u, 9u, fence_left_bitmap),
+    BITMAP(15u, 9u, fence_right_bitmap),
+    BITMAP(5u, 2u, ui_tiny_mark_bitmap),
+    BITMAP(7u, 2u, ui_effect_01_bitmap),
+    BITMAP(8u, 8u, ui_sun_bitmap),
+    BITMAP(19u, 7u, ui_time_0130_bitmap),
+    BITMAP(5u, 8u, ui_moon_bitmap),
+    BITMAP(12u, 8u, tool_watering_can_bitmap),
+    BITMAP(12u, 10u, tool_hoe_bitmap),
+    BITMAP(9u, 10u, tool_seed_bag_bitmap),
+    BITMAP(8u, 9u, menu_four_tiles_bitmap),
+    BITMAP(9u, 9u, menu_grid_bitmap),
+    BITMAP(9u, 7u, crop_sprout_bitmap),
+    BITMAP(9u, 8u, crop_leaf_bitmap),
+    BITMAP(5u, 7u, ui_marker_bitmap),
+    BITMAP(7u, 6u, crop_seedling_bitmap),
+    BITMAP(9u, 15u, crop_wheat_bitmap),
+    BITMAP(9u, 10u, crop_pumpkin_bitmap),
+    BITMAP(9u, 14u, crop_tomato_bitmap),
+    BITMAP(8u, 4u, layout_frame_bottom_bitmap),
+    BITMAP(60u, 14u, layout_toolbar_frame_bitmap),
+    BITMAP(3u, 3u, layout_farm_divider_bitmap),
+    BITMAP(15u, 15u, plot_top_1_bitmap),
+};
+
+const size_t bitmap_viewer_catalog_count =
+    sizeof(bitmap_viewer_catalog) / sizeof(bitmap_viewer_catalog[0]);
+
+#define PLACEMENT(width_value, height_value, data_value, x_value, y_value)                         \
+    {{width_value, height_value, (width_value + 7u) / 8u, data_value}, x_value, y_value}
+
+/*
+ * Recreates drawFarmLayout() with tightly cropped, shared bitmaps. Coordinates
+ * include each source bitmap's removed transparent top/left offset.
+ */
+const bitmap_viewer_placement_t bitmap_viewer_farm_layout[] = {
+    PLACEMENT(6u, 3u, ui_sparkle_bitmap, 2u, 21u),
+    PLACEMENT(11u, 5u, ui_grass_tuft_bitmap, 3u, 36u),
+    PLACEMENT(11u, 5u, ui_grass_tuft_bitmap, 100u, 6u),
+    PLACEMENT(8u, 4u, layout_frame_bottom_bitmap, 108u, 27u),
+    PLACEMENT(15u, 9u, fence_left_bitmap, 0u, 4u),
+    PLACEMENT(15u, 9u, fence_right_bitmap, 113u, 4u),
+    PLACEMENT(5u, 2u, ui_tiny_mark_bitmap, 103u, 51u),
+    PLACEMENT(5u, 2u, ui_tiny_mark_bitmap, 29u, 10u),
+    PLACEMENT(7u, 2u, ui_effect_01_bitmap, 14u, 47u),
+    PLACEMENT(8u, 8u, ui_sun_bitmap, 44u, 2u),
+    PLACEMENT(19u, 7u, ui_time_0130_bitmap, 55u, 2u),
+    PLACEMENT(5u, 8u, ui_moon_bitmap, 46u, 2u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 14u, 14u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 33u, 14u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 52u, 14u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 71u, 14u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 90u, 14u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 24u, 33u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 43u, 33u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 62u, 33u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 81u, 33u),
+    PLACEMENT(15u, 15u, plot_top_1_bitmap, 100u, 33u),
+    PLACEMENT(12u, 8u, tool_watering_can_bitmap, 38u, 53u),
+    PLACEMENT(12u, 10u, tool_hoe_bitmap, 54u, 52u),
+    PLACEMENT(9u, 10u, tool_seed_bag_bitmap, 70u, 52u),
+    PLACEMENT(60u, 14u, layout_toolbar_frame_bitmap, 35u, 50u),
+    PLACEMENT(8u, 9u, menu_four_tiles_bitmap, 83u, 52u),
+    PLACEMENT(9u, 9u, menu_grid_bitmap, 83u, 52u),
+    PLACEMENT(9u, 7u, crop_sprout_bitmap, 17u, 18u),
+    PLACEMENT(9u, 8u, crop_leaf_bitmap, 36u, 17u),
+    PLACEMENT(5u, 7u, ui_marker_bitmap, 57u, 18u),
+    PLACEMENT(7u, 6u, crop_seedling_bitmap, 47u, 39u),
+    PLACEMENT(9u, 15u, crop_wheat_bitmap, 65u, 30u),
+    PLACEMENT(3u, 3u, layout_farm_divider_bitmap, 30u, 41u),
+    PLACEMENT(9u, 10u, crop_pumpkin_bitmap, 84u, 35u),
+    PLACEMENT(9u, 14u, crop_tomato_bitmap, 103u, 31u),
+};
+
+const size_t bitmap_viewer_farm_layout_count =
+    sizeof(bitmap_viewer_farm_layout) / sizeof(bitmap_viewer_farm_layout[0]);
